@@ -25,15 +25,26 @@ contract CounterTest is Test {
     /// @notice Test function that caluclates base amount from burn
     function testCalculateBase() public {
         uint256 burn1xen = 1 * 10**18;
-        uint256 ln1xen = BLAU._calculateBase(burn1xen);
+        uint256 ln1xen = BLAU.calculateBase(burn1xen);
         assertEq(ln1xen, 0); // verify ln(1) = 0
 
         uint256 burn10xen = 10 * 10**18;
-        uint256 ln10xen = BLAU._calculateBase(burn10xen);
+        uint256 ln10xen = BLAU.calculateBase(burn10xen);
         assertEq(ln10xen, 2302585092994045674); // verify ln(10)
 
         uint256 burn100xen = 100 * 10**18;
-        uint256 ln100xen = BLAU._calculateBase(burn100xen);
+        uint256 ln100xen = BLAU.calculateBase(burn100xen);
         assertEq(ln100xen, 4605170185988091359); // verify ln(100)
+    }
+
+    /// @notice Test calculating bonus amount from burn and stake days
+    function testCalculateBonus() public {
+        uint256 burn1xen = 1 * 10**18;
+        uint256 bonus1Xen = BLAU.calculateBonus(burn1xen, 1);
+        assertEq(bonus1Xen, 0); // verify 1 xen stake no bonus
+
+        uint256 burn2xen = 2 * 10**18;
+        uint256 bonus2Xen = BLAU.calculateBonus(burn2xen, 1);
+        assertEq(bonus2Xen, 207944154167983592); // verify 2 xen stake bonus
     }
 }

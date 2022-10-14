@@ -7,6 +7,10 @@ import {ERC20} from "solmate/tokens/ERC20.sol";
 contract Blau is ERC20("BLAU", "BLAU", 18) {
     using PRBMathUD60x18 for uint256;
 
+    uint256 internal constant EQUITY_SCALE = 1e5;
+    uint256 internal constant SIZE_BONUS_PERCENT = 10;
+    uint256 internal constant TIME_BONUS_PERCENT = 20;
+
     function startStake(address burnAddress, uint256 term) public {}
 
     function startStake(uint256 amount, uint256 term) public {}
@@ -15,7 +19,18 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
 
     function endStake() public {}
 
-    function _calculateBase(uint256 xenAmount) public pure returns (uint256) {
-        return xenAmount.ln();
+    function calculateBase(uint256 xen) public pure returns (uint256) {
+        return xen.ln();
+    }
+
+    function calculateBonus(uint256 xen, uint256 stakeDays)
+        public
+        pure
+        returns (uint256)
+    {
+        uint256 base = calculateBase(xen);
+        uint256 timeBonus = base * stakeDays * TIME_BONUS_PERCENT;
+        uint256 sizeBonus = base * SIZE_BONUS_PERCENT;
+        return (timeBonus + sizeBonus) / 100;
     }
 }
