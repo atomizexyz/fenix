@@ -76,4 +76,33 @@ contract BlauTest is Test {
         BLAU._updateEquity(stake1);
         assertEq(BLAU.shareRate(), 1200549237776962269); // verify 20% gain
     }
+
+    /// @notice Test stake penality
+    function testCalculateEarlyPenalty() public {
+        uint256 base = 13.81551 * 1e18;
+        uint256 bonus = 2.77069 * 1e18;
+
+        uint256 timestamp = block.timestamp;
+        Stake memory stake1 = Stake(timestamp, 100, base, bonus);
+
+        vm.warp(timestamp + (86400 * 0));
+        uint256 penalty0 = BLAU._calculateEarlyPenalty(stake1);
+        assertEq(penalty0, 0); // verify 0% complete 0% return
+
+        vm.warp(timestamp + (86400 * 25));
+        uint256 penalty25 = BLAU._calculateEarlyPenalty(stake1);
+        assertEq(penalty25, 1036637500000000000); // verify 25% complete 6.25% return
+
+        vm.warp(timestamp + (86400 * 50));
+        uint256 penalty50 = BLAU._calculateEarlyPenalty(stake1);
+        assertEq(penalty50, 4146550000000000000); // verify 50% complete 25% return
+
+        vm.warp(timestamp + (86400 * 75));
+        uint256 penalty75 = BLAU._calculateEarlyPenalty(stake1);
+        assertEq(penalty75, 9329737500000000000); // verify 75% complete 56.25% return
+
+        vm.warp(timestamp + (86400 * 100));
+        uint256 penalty100 = BLAU._calculateEarlyPenalty(stake1);
+        assertEq(penalty100, 16586200000000000000); // verify 100% complete 100% return
+    }
 }

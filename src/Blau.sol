@@ -14,6 +14,7 @@ struct Stake {
 contract Blau is ERC20("BLAU", "BLAU", 18) {
     using PRBMathUD60x18 for uint256;
 
+    uint256 internal constant ONE_DAY_SECONDS = 86400;
     uint256 internal constant DECIMALS = 18;
     uint256 internal constant SHARE_RATE_SCALE = 1e5;
     uint256 internal constant TIME_BONUS = 1_820;
@@ -54,5 +55,17 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         if (roi > shareRate) {
             shareRate = roi;
         }
+    }
+
+    function _calculateEarlyPenalty(Stake memory stake)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 termDelta = (block.timestamp - stake.startTs);
+        uint256 percent = termDelta.div(stake.term * ONE_DAY_SECONDS);
+        uint256 percentAdjusted = percent.powu(2);
+        uint256 penalty = (stake.base + stake.bonus) * percentAdjusted;
+        return penalty / 1e18;
     }
 }
