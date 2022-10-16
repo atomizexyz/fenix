@@ -15,6 +15,8 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
     using PRBMathUD60x18 for uint256;
 
     uint256 internal constant ONE_DAY_SECONDS = 86400;
+    uint256 internal constant GRACE_PERIOD_DAYS = 28 * ONE_DAY_SECONDS;
+    uint256 internal constant END_PENALTY_WEEKS = 7 * 100;
     uint256 internal constant DECIMALS = 18;
     uint256 internal constant SHARE_RATE_SCALE = 1e5;
     uint256 internal constant TIME_BONUS = 1_820;
@@ -62,10 +64,28 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         view
         returns (uint256)
     {
-        uint256 termDelta = (block.timestamp - stake.startTs);
+        require(block.timestamp >= stake.startTs, "Stake not started");
+        uint256 termDelta = block.timestamp - stake.startTs;
         uint256 percent = termDelta.div(stake.term * ONE_DAY_SECONDS);
         uint256 percentAdjusted = percent.powu(2);
-        uint256 penalty = (stake.base + stake.bonus) * percentAdjusted;
-        return penalty / 1e18;
+        uint256 penalty = ((stake.base + stake.bonus) * percentAdjusted) / 1e18;
+        return penalty;
+    }
+
+    function _calculateLatePenalty(Stake memory stake)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
+        uint256 endGraceTs = endTs + GRACE_PERIOD_DAYS;
+        require(block.timestamp >= stake.startTs, "Stake not started");
+        require(block.timestamp >= endTs, "Stake is active");
+        require(block.timestamp >= endGraceTs, "Stake in grace period");
+        uint256 termDelta = block.timestamp - endGraceTs;
+        uint256 percent = termDelta.div(END_PENALTY_WEEKS * ONE_DAY_SECONDS);
+        uint256 reward = stake.base + stake.bonus;
+        uint256 penalty = (reward * percent) / 1e18;
+        return reward - penalty;
     }
 }

@@ -105,4 +105,26 @@ contract BlauTest is Test {
         uint256 penalty100 = BLAU._calculateEarlyPenalty(stake1);
         assertEq(penalty100, 16586200000000000000); // verify 100% complete 100% return
     }
+
+    function testCalculateLatePenalty() public {
+        uint256 base = 13.81551 * 1e18;
+        uint256 bonus = 2.77069 * 1e18;
+
+        uint256 timestamp = block.timestamp;
+        Stake memory stake1 = Stake(timestamp, 100, base, bonus);
+
+        vm.warp(timestamp + (86400 * 128));
+        uint256 penalty0 = BLAU._calculateLatePenalty(stake1);
+        assertEq(penalty0, 16586200000000000000); // verify 0% complete 0% return
+
+        uint256 FIFTY_WEEKS = 7 * 50;
+        vm.warp(timestamp + (86400 * (128 + FIFTY_WEEKS)));
+        uint256 penalty50 = BLAU._calculateLatePenalty(stake1);
+        assertEq(penalty50, 8293100000000000000); // verify 0% complete 0% return
+
+        uint256 ONE_HUNDRED_WEEKS = 7 * 100;
+        vm.warp(timestamp + (86400 * (128 + ONE_HUNDRED_WEEKS)));
+        uint256 penalty100 = BLAU._calculateLatePenalty(stake1);
+        assertEq(penalty100, 0); // verify 0% complete 0% return
+    }
 }
