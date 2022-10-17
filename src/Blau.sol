@@ -5,6 +5,7 @@ import {PRBMathUD60x18} from "prb-math/PRBMathUD60x18.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 struct Stake {
+    uint256 stakeId;
     uint256 startTs;
     uint256 term;
     uint256 base;
@@ -24,25 +25,27 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
 
     uint256 public shareRate = 1e18;
 
+    function burnXEN(uint256 xen) public {}
+
     function startStake(address burnAddress, uint256 term) public {}
 
-    function startStake(uint256 amount, uint256 term) public {}
+    function startStake(uint256 eqt, uint256 term) public {}
 
-    function deferStake() public {}
+    function deferStake(uint256 stakeId) public {}
 
-    function endStake() public {}
+    function endStake(uint256 stakeId) public {}
 
     function calculateBase(uint256 xen) public pure returns (uint256) {
         return xen.ln() * 10**DECIMALS;
     }
 
-    function calculateBonus(uint256 xen, uint256 stakeDays)
+    function calculateBonus(uint256 xen, uint256 term)
         public
         pure
         returns (uint256)
     {
         uint256 base = calculateBase(xen);
-        uint256 timeBonus = (base * stakeDays) / TIME_BONUS;
+        uint256 timeBonus = (base * term) / TIME_BONUS;
         if (base > MIN_BONUS) {
             uint256 sizeBonus = base.ln();
             return timeBonus + sizeBonus;
@@ -51,7 +54,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         }
     }
 
-    function _updateEquity(Stake memory stake) public {
+    function updateEquity(Stake memory stake) public {
         uint256 roi = 1e18 + stake.bonus.div(stake.base);
 
         if (roi > shareRate) {
@@ -59,7 +62,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         }
     }
 
-    function _calculateEarlyPenalty(Stake memory stake)
+    function calculateEarlyPenalty(Stake memory stake)
         public
         view
         returns (uint256)
@@ -72,7 +75,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         return penalty;
     }
 
-    function _calculateLatePenalty(Stake memory stake)
+    function calculateLatePenalty(Stake memory stake)
         public
         view
         returns (uint256)
