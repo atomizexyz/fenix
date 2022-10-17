@@ -254,6 +254,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@prb/test@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "@prb/test@npm:0.1.2"
+  checksum: 1936dce0afd5d0fc701cc998ed058c9576b9fdeb043d1c8ada7583a1fc361abd1f20215c139ff40ab84ee07c1b4bb48290a637785d8576b277b6250c3b2dacc9
+  languageName: node
+  linkType: hard
+
 "@solidity-parser/parser@npm:^0.14.1":
   version: 0.14.2
   resolution: "@solidity-parser/parser@npm:0.14.2"
@@ -334,6 +341,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": ^17.0.3
     "@commitlint/config-conventional": ^17.0.3
+    "@prb/test": ^0.1.2
     commitizen: ^4.2.4
     cz-conventional-changelog: ^3.3.0
     husky: ^8.0.1
