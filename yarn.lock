@@ -335,9 +335,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"Blau@workspace:.":
+"Fenix@workspace:.":
   version: 0.0.0-use.local
-  resolution: "Blau@workspace:."
+  resolution: "Fenix@workspace:."
   dependencies:
     "@commitlint/cli": ^17.0.3
     "@commitlint/config-conventional": ^17.0.3

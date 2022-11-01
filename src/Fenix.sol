@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {PRBMathUD60x18} from "prb-math/PRBMathUD60x18.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
+import { PRBMathUD60x18 } from "prb-math/PRBMathUD60x18.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 
 struct Stake {
     uint256 stakeId;
@@ -12,7 +12,7 @@ struct Stake {
     uint256 bonus;
 }
 
-contract Blau is ERC20("BLAU", "BLAU", 18) {
+contract Fenix is ERC20("FENIX", "FENIX", 18) {
     using PRBMathUD60x18 for uint256;
 
     uint256 internal constant ONE_DAY_SECONDS = 86400;
@@ -39,11 +39,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         return xen.ln() * 10**DECIMALS;
     }
 
-    function calculateBonus(uint256 xen, uint256 term)
-        public
-        pure
-        returns (uint256)
-    {
+    function calculateBonus(uint256 xen, uint256 term) public pure returns (uint256) {
         uint256 base = calculateBase(xen);
         uint256 timeBonus = (base * term) / TIME_BONUS;
         if (base > MIN_BONUS) {
@@ -62,11 +58,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         }
     }
 
-    function calculateEarlyPenalty(Stake memory stake)
-        public
-        view
-        returns (uint256)
-    {
+    function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {
         require(block.timestamp >= stake.startTs, "Stake not started");
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 percent = termDelta.div(stake.term * ONE_DAY_SECONDS);
@@ -75,11 +67,7 @@ contract Blau is ERC20("BLAU", "BLAU", 18) {
         return penalty;
     }
 
-    function calculateLatePenalty(Stake memory stake)
-        public
-        view
-        returns (uint256)
-    {
+    function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
         uint256 endGraceTs = endTs + GRACE_PERIOD_DAYS;
         require(block.timestamp >= stake.startTs, "Stake not started");
