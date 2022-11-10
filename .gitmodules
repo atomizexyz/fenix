@@ -12,3 +12,6 @@
 	url = https://github.com/paulrberg/prb-test
 [submodule "/Users/joeblau/Developer/joeblau/src/blau/lib/prb-test"]
 	branch = 0.1.2
+[submodule "lib/XEN-crypto"]
+	path = lib/XEN-crypto
+	url = https://github.com/FairCrypto/XEN-crypto
