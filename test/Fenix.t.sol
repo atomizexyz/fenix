@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { Fenix, Stake } from "src/Fenix.sol";
+import { XENCrytpo } from "xen-crypto/XENCrypto.sol";
 
 contract FenixTest is Test {
     Fenix internal FENIX;
