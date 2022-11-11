@@ -4,15 +4,17 @@ pragma solidity ^0.8.13;
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { Fenix, Stake } from "src/Fenix.sol";
-import { XENCrytpo } from "xen-crypto/XENCrypto.sol";
+import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 
 contract FenixTest is Test {
     Fenix internal FENIX;
+    XENCrypto internal XENCRYPTO;
 
     /// ============ Setup test suite ============
 
     function setUp() public {
         FENIX = new Fenix();
+        XENCRYPTO = new XENCrypto();
     }
 
     /// @notice Test that the contract can be deployed successfully
@@ -127,5 +129,30 @@ contract FenixTest is Test {
         vm.warp(timestamp + (86400 * (128 + ONE_HUNDRED_WEEKS)));
         uint256 penalty100 = FENIX.calculateLatePenalty(stake1);
         assertEq(penalty100, 0); // verify 0% complete 0% return
+    }
+
+    function testXENBurn() public {
+        address userAddr = address(this);
+        address xenAddr = address(XENCRYPTO);
+        address fenixAddr = address(FENIX);
+        uint256 timestamp = block.timestamp;
+        XENCRYPTO.claimRank(1);
+        vm.warp(timestamp + (86400 * 1) + 1);
+        XENCRYPTO.claimMintReward();
+        uint256 balancePreBurn = XENCRYPTO.balanceOf(userAddr);
+
+        console.log(userAddr, balancePreBurn, xenAddr);
+
+        assertEq(balancePreBurn, 3300 * 1e18);
+
+        XENCRYPTO.approve(fenixAddr, balancePreBurn);
+
+        FENIX.burnXEN(balancePreBurn, xenAddr);
+
+        uint256 balancePostBurnXEN = XENCRYPTO.balanceOf(userAddr);
+        uint256 balancePostBurnFENIX = FENIX.balanceOf(userAddr);
+
+        assertEq(balancePostBurnXEN, 0);
+        assertEq(balancePostBurnFENIX, 3300 * 1e18);
     }
 }

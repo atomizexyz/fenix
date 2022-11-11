@@ -3,6 +3,10 @@ pragma solidity ^0.8.13;
 
 import { PRBMathUD60x18 } from "prb-math/PRBMathUD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
+import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
+import { console } from "forge-std/console.sol";
 
 struct Stake {
     uint256 stakeId;
@@ -12,7 +16,7 @@ struct Stake {
     uint256 bonus;
 }
 
-contract Fenix is ERC20("FENIX", "FENIX", 18) {
+contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     using PRBMathUD60x18 for uint256;
 
     uint256 internal constant ONE_DAY_SECONDS = 86400;
@@ -25,9 +29,24 @@ contract Fenix is ERC20("FENIX", "FENIX", 18) {
 
     uint256 public shareRate = 1e18;
 
-    function burnXEN(uint256 xen) public {}
+    // IBurnRedeemable
 
-    function startStake(address burnAddress, uint256 term) public {}
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IBurnRedeemable).interfaceId;
+    }
+
+    function onTokenBurned(address user, uint256 amount) external {
+        // require(msg.sender == address(xenContract), "Burner: wrong caller");
+        require(user != address(0), "Burner: zero user address");
+        require(amount != 0, "Burner: zero amount");
+        _mint(user, amount);
+    }
+
+    function burnXEN(uint256 xen, address xenAddress) public {
+        IBurnableToken(xenAddress).burn(msg.sender, xen);
+    }
+
+    // function startStake(address burnAddress, uint256 term) public {}
 
     function startStake(uint256 eqt, uint256 term) public {}
 
