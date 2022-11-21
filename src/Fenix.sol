@@ -9,8 +9,8 @@ import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
 import { console } from "forge-std/console.sol";
 
 struct Stake {
+    uint40 startTs;
     uint256 stakeId;
-    uint256 startTs;
     uint256 term;
     uint256 base;
     uint256 bonus;
@@ -26,6 +26,8 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     uint256 internal constant SHARE_RATE_SCALE = 1e5;
     uint256 internal constant TIME_BONUS = 1_820;
     uint256 internal constant MIN_BONUS = 1e19;
+    uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
+    uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
 
     uint256 public shareRate = 1e18;
 
@@ -88,14 +90,18 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
 
     function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
-        uint256 endGraceTs = endTs + GRACE_PERIOD_DAYS;
         require(block.timestamp >= stake.startTs, "Stake not started");
         require(block.timestamp >= endTs, "Stake is active");
-        require(block.timestamp >= endGraceTs, "Stake in grace period");
-        uint256 termDelta = block.timestamp - endGraceTs;
-        uint256 percent = termDelta.div(END_PENALTY_WEEKS * ONE_DAY_SECONDS);
-        uint256 reward = stake.base + stake.bonus;
-        uint256 penalty = (reward * percent) / 1e18;
-        return reward - penalty;
+        uint256 lateDays = block.timestamp - endTs;
+        if (lateDays > ONE_EIGHTY_DAYS_SECONDS) return 1e18;
+        return (lateDays**3).div(ONE_EIGHTY_DAYS_SECONDS_CUBED);
+    }
+
+    function calculatePayout(Stake memory stake) public view returns (uint256) {
+        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
+        require(block.timestamp >= stake.startTs, "Stake not started");
+        require(block.timestamp >= endTs, "Stake is active");
+
+        return stake.base + stake.bonus;
     }
 }
