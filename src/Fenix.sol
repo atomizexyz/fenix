@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import { PRBMathUD60x18 } from "prb-math/PRBMathUD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
@@ -29,7 +30,10 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
 
+    uint256 public startTimesamp = 0;
     uint256 public shareRate = 1e18;
+    uint256 public poolSize = 0;
+    bool public distributeBigBonus = true;
 
     // IBurnRedeemable
 
@@ -48,7 +52,7 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
         IBurnableToken(xenAddress).burn(msg.sender, xen);
     }
 
-    // function startStake(address burnAddress, uint256 term) public {}
+    // Init
 
     function startStake(uint256 eqt, uint256 term) public {}
 
@@ -101,7 +105,13 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
         require(block.timestamp >= stake.startTs, "Stake not started");
         require(block.timestamp >= endTs, "Stake is active");
-
         return stake.base + stake.bonus;
+    }
+
+    function bigBonus(address xenAddress) public {
+        require(distributeBigBonus, "Big bonus already distributed");
+        distributeBigBonus = false;
+        uint256 totalSupply = IERC20(xenAddress).totalSupply();
+        poolSize += totalSupply;
     }
 }

@@ -171,4 +171,16 @@ contract FenixTest is Test {
         assertEq(balancePostBurnXEN, 0);
         assertEq(balancePostBurnFENIX, 3300 * 1e18);
     }
+
+    function testBigBonus() public {
+        address xenAddr = address(XENCRYPTO);
+        uint256 timestamp = block.timestamp;
+        XENCRYPTO.claimRank(1);
+        vm.warp(timestamp + (86400 * 1) + 1);
+        XENCRYPTO.claimMintReward();
+
+        FENIX.bigBonus(xenAddr);
+
+        assertEq(FENIX.poolSize(), 3300000000000000000000);
+    }
 }
