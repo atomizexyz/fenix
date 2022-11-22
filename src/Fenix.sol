@@ -17,6 +17,12 @@ struct Stake {
     uint256 bonus;
 }
 
+struct Deferral {
+    uint40 deferralTs;
+    uint256 stakeId;
+    uint256 amount;
+}
+
 contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     using PRBMathUD60x18 for uint256;
 
@@ -34,6 +40,9 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     uint256 public shareRate = 1e18;
     uint256 public poolSize = 0;
     bool public distributeBigBonus = true;
+
+    mapping(address => Stake[]) public stakes;
+    mapping(address => Deferral[]) public deferrals;
 
     // IBurnRedeemable
 
@@ -56,9 +65,23 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
 
     function startStake(uint256 eqt, uint256 term) public {}
 
-    function deferStake(uint256 stakeId) public {}
+    function deferStake(uint256 stakeIdx, address stakerAddress) public {
+        Stake[] storage stakesList = stakes[stakerAddress];
+        Stake storage _stake = stakesList[stakeIdx];
+        require(_stake.stakeId >= 0, "Stake not found");
 
-    function endStake(uint256 stakeId) public {}
+        Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base + _stake.bonus);
+
+        stakesList[stakeIdx] = stakesList[stakesList.length - 1];
+        stakesList.pop();
+
+        stakes[stakerAddress] = stakesList;
+        deferrals[stakerAddress].push(deferral);
+    }
+
+    function endStake(uint256 stakeIdx, address stakerAddress) public {
+        deferStake(stakeIdx, stakerAddress);
+    }
 
     function calculateBase(uint256 xen) public pure returns (uint256) {
         return xen.ln() * 10**DECIMALS;
