@@ -23,7 +23,7 @@ struct Deferral {
     uint256 amount;
 }
 
-contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
+contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     using PRBMathUD60x18 for uint256;
 
     uint256 internal constant ONE_DAY_SECONDS = 86400;
@@ -39,10 +39,17 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
     uint256 public startTimesamp = 0;
     uint256 public shareRate = 1e18;
     uint256 public poolSize = 0;
+    address public xenContractAddress;
     bool public distributeBigBonus = true;
 
     mapping(address => Stake[]) public stakes;
     mapping(address => Deferral[]) public deferrals;
+
+    // Construtor
+
+    constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
+        xenContractAddress = xenAddress;
+    }
 
     // IBurnRedeemable
 
@@ -57,8 +64,8 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
         _mint(user, amount);
     }
 
-    function burnXEN(uint256 xen, address xenAddress) public {
-        IBurnableToken(xenAddress).burn(msg.sender, xen);
+    function burnXEN(uint256 xen) public {
+        IBurnableToken(xenContractAddress).burn(msg.sender, xen);
     }
 
     // Init
@@ -131,10 +138,10 @@ contract Fenix is ERC20("FENIX", "FENIX", 18), IBurnRedeemable, IERC165 {
         return stake.base + stake.bonus;
     }
 
-    function bigBonus(address xenAddress) public {
+    function bigBonus() public {
         require(distributeBigBonus, "Big bonus already distributed");
         distributeBigBonus = false;
-        uint256 totalSupply = IERC20(xenAddress).totalSupply();
+        uint256 totalSupply = IERC20(xenContractAddress).totalSupply();
         poolSize += totalSupply;
     }
 }
