@@ -73,7 +73,7 @@ contract FenixTest is Test {
     function testShareReateUpdate() public {
         uint256 base = 13.81551 * 1e18;
         uint256 bonus = 2.77069 * 1e18;
-        Stake memory stake1 = Stake(1, 0, 1, base, bonus);
+        Stake memory stake1 = Stake(0, 1, 1, base, bonus, base + bonus);
 
         assertEq(fenix.shareRate(), 1000000000000000000); // verify initial share rate
 
@@ -87,7 +87,7 @@ contract FenixTest is Test {
         uint256 bonus = 2.77069 * 1e18;
         uint256 timestamp = block.timestamp;
 
-        Stake memory stake1 = Stake(1, timestamp, 1, base, bonus);
+        Stake memory stake1 = Stake(uint40(timestamp), 1, 1, base, bonus, base + bonus);
 
         vm.warp(timestamp + (86400 * 1));
         uint256 payout = fenix.calculatePayout(stake1);
@@ -100,7 +100,7 @@ contract FenixTest is Test {
         uint256 bonus = 2.77069 * 1e18;
 
         uint256 timestamp = block.timestamp;
-        Stake memory stake1 = Stake(1, timestamp, 100, base, bonus);
+        Stake memory stake1 = Stake(uint40(timestamp), 1, 100, base, bonus, base + bonus);
 
         vm.warp(timestamp + (86400 * 0));
         uint256 penalty0 = fenix.calculateEarlyPenalty(stake1);
@@ -129,7 +129,7 @@ contract FenixTest is Test {
         uint256 baseTerm = 100;
 
         uint256 timestamp = block.timestamp;
-        Stake memory stake1 = Stake(1, timestamp, baseTerm, base, bonus);
+        Stake memory stake1 = Stake(uint40(timestamp), 1, baseTerm, base, bonus, base + bonus);
 
         vm.warp(timestamp + (86400 * baseTerm));
         uint256 penalty0 = fenix.calculateLatePenalty(stake1);
@@ -157,8 +157,6 @@ contract FenixTest is Test {
         xenCrypto.claimMintReward();
         uint256 balancePreBurn = xenCrypto.balanceOf(userAddr);
 
-        console.log(userAddr, balancePreBurn);
-
         assertEq(balancePreBurn, 3300 * 1e18);
 
         xenCrypto.approve(fenixAddr, balancePreBurn);
@@ -181,5 +179,34 @@ contract FenixTest is Test {
         fenix.bigBonus();
 
         assertEq(fenix.poolSize(), 3300000000000000000000);
+    }
+
+    function testStartStake() public {
+        address userAddr = address(this);
+        address fenixAddr = address(fenix);
+        uint256 timestamp = block.timestamp;
+        xenCrypto.claimRank(1);
+        vm.warp(timestamp + (86400 * 1) + 1);
+        xenCrypto.claimMintReward();
+
+        uint256 balancePreBurn = xenCrypto.balanceOf(userAddr);
+
+        xenCrypto.approve(fenixAddr, balancePreBurn);
+
+        fenix.burnXEN(balancePreBurn);
+
+        assertEq(fenix.currentStakeId(), 0);
+
+        fenix.startStake(balancePreBurn / 2, 100);
+
+        assertEq(fenix.currentStakeId(), 1);
+
+        fenix.startStake(balancePreBurn / 2, 100);
+        assertEq(fenix.currentStakeId(), 2);
+
+        assertEq(fenix.stakeCount(userAddr), 2);
+
+        assertEq(fenix.stakeFor(userAddr, 0).stakeId, 0);
+        assertEq(fenix.stakeFor(userAddr, 1).stakeId, 1);
     }
 }

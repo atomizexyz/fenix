@@ -15,6 +15,7 @@ struct Stake {
     uint256 term;
     uint256 base;
     uint256 bonus;
+    uint256 shares;
 }
 
 struct Deferral {
@@ -36,10 +37,12 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
 
-    uint256 public startTimesamp = 0;
+    address public xenContractAddress;
+    uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
     uint256 public poolSize = 0;
-    address public xenContractAddress;
+    uint256 public currentStakeId = 0;
+
     bool public distributeBigBonus = true;
 
     mapping(address => Stake[]) public stakes;
@@ -49,6 +52,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
         xenContractAddress = xenAddress;
+        startTs = block.timestamp;
     }
 
     // IBurnRedeemable
@@ -70,19 +74,27 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     // Init
 
-    function startStake(uint256 eqt, uint256 term) public {}
+    function startStake(uint256 fenix, uint256 term) public {
+        uint256 base = calculateBase(fenix);
+        uint256 bonus = calculateBonus(fenix, term);
+        uint256 equity = base + bonus;
+
+        Stake memory _stake = Stake(uint40(block.timestamp), currentStakeId, term, base, bonus, equity);
+        stakes[msg.sender].push(_stake);
+        ++currentStakeId;
+    }
 
     function deferStake(uint256 stakeIdx, address stakerAddress) public {
-        Stake[] storage stakesList = stakes[stakerAddress];
-        Stake storage _stake = stakesList[stakeIdx];
+        Stake[] storage _stakesList = stakes[stakerAddress];
+        Stake storage _stake = _stakesList[stakeIdx];
         require(_stake.stakeId >= 0, "Stake not found");
 
         Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base + _stake.bonus);
 
-        stakesList[stakeIdx] = stakesList[stakesList.length - 1];
-        stakesList.pop();
+        _stakesList[stakeIdx] = _stakesList[_stakesList.length - 1];
+        _stakesList.pop();
 
-        stakes[stakerAddress] = stakesList;
+        stakes[stakerAddress] = _stakesList;
         deferrals[stakerAddress].push(deferral);
     }
 
@@ -90,12 +102,20 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         deferStake(stakeIdx, stakerAddress);
     }
 
-    function calculateBase(uint256 xen) public pure returns (uint256) {
-        return xen.ln() * 10**DECIMALS;
+    function stakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
+        return stakes[stakerAddress][stakeIndex];
     }
 
-    function calculateBonus(uint256 xen, uint256 term) public pure returns (uint256) {
-        uint256 base = calculateBase(xen);
+    function stakeCount(address stakerAddress) public view returns (uint256) {
+        return stakes[stakerAddress].length;
+    }
+
+    function calculateBase(uint256 fenix) public pure returns (uint256) {
+        return fenix.ln() * 10**DECIMALS;
+    }
+
+    function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
+        uint256 base = calculateBase(fenix);
         uint256 timeBonus = (base * term) / TIME_BONUS;
         if (base > MIN_BONUS) {
             uint256 sizeBonus = base.ln();
