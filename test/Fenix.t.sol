@@ -148,28 +148,6 @@ contract FenixTest is Test {
         assertEq(penalty200, 1000000000000000000); // verify end day 360, 100% penalty
     }
 
-    function testXENBurn() public {
-        address userAddr = address(this);
-        address fenixAddr = address(fenix);
-        uint256 timestamp = block.timestamp;
-        xenCrypto.claimRank(1);
-        vm.warp(timestamp + (86400 * 1) + 1);
-        xenCrypto.claimMintReward();
-        uint256 balancePreBurn = xenCrypto.balanceOf(userAddr);
-
-        assertEq(balancePreBurn, 3300 * 1e18);
-
-        xenCrypto.approve(fenixAddr, balancePreBurn);
-
-        fenix.burnXEN(balancePreBurn);
-
-        uint256 balancePostBurnXEN = xenCrypto.balanceOf(userAddr);
-        uint256 balancePostBurnFENIX = fenix.balanceOf(userAddr);
-
-        assertEq(balancePostBurnXEN, 0);
-        assertEq(balancePostBurnFENIX, 3300 * 1e18);
-    }
-
     function testBigBonus() public {
         uint256 timestamp = block.timestamp;
         xenCrypto.claimRank(1);
@@ -179,34 +157,5 @@ contract FenixTest is Test {
         fenix.bigBonus();
 
         assertEq(fenix.poolSize(), 3300000000000000000000);
-    }
-
-    function testStartStake() public {
-        address userAddr = address(this);
-        address fenixAddr = address(fenix);
-        uint256 timestamp = block.timestamp;
-        xenCrypto.claimRank(1);
-        vm.warp(timestamp + (86400 * 1) + 1);
-        xenCrypto.claimMintReward();
-
-        uint256 balancePreBurn = xenCrypto.balanceOf(userAddr);
-
-        xenCrypto.approve(fenixAddr, balancePreBurn);
-
-        fenix.burnXEN(balancePreBurn);
-
-        assertEq(fenix.currentStakeId(), 0);
-
-        fenix.startStake(balancePreBurn / 2, 100);
-
-        assertEq(fenix.currentStakeId(), 1);
-
-        fenix.startStake(balancePreBurn / 2, 100);
-        assertEq(fenix.currentStakeId(), 2);
-
-        assertEq(fenix.stakeCount(userAddr), 2);
-
-        assertEq(fenix.stakeFor(userAddr, 0).stakeId, 0);
-        assertEq(fenix.stakeFor(userAddr, 1).stakeId, 1);
     }
 }
