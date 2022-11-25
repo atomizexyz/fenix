@@ -20,8 +20,8 @@ contract FenixStakeTest is Test {
 
     /// @notice Test starting stake works
     function testStartStakes() public {
-        address userAddr = address(this);
-        _getFenixFor(userAddr);
+        address stakerAddress = address(this);
+        _getFenixFor(stakerAddress);
 
         uint256 fenixBalance = fenix.balanceOf(address(this));
         uint256 feinxHalfBalance = fenixBalance / 2;
@@ -35,10 +35,26 @@ contract FenixStakeTest is Test {
         fenix.startStake(feinxHalfBalance / 2, 100);
         assertEq(fenix.currentStakeId(), 2);
 
-        assertEq(fenix.stakeCount(userAddr), 2);
+        assertEq(fenix.stakeCount(stakerAddress), 2);
 
-        assertEq(fenix.stakeFor(userAddr, 0).stakeId, 0);
-        assertEq(fenix.stakeFor(userAddr, 1).stakeId, 1);
+        assertEq(fenix.stakeFor(stakerAddress, 0).stakeId, 0);
+        assertEq(fenix.stakeFor(stakerAddress, 1).stakeId, 1);
+    }
+
+    /// @notice Test deferring stake
+    function testDeferStake() public {
+        uint256 term = 100;
+        address stakerAddress = address(this);
+        _getFenixFor(stakerAddress);
+
+        uint256 fenixBalance = fenix.balanceOf(address(this));
+        fenix.startStake(fenixBalance, term);
+
+        vm.warp(block.timestamp + (86400 * term));
+        fenix.deferStake(0, stakerAddress);
+
+        assertEq(fenix.deferralCount(stakerAddress), 1);
+        assertEq(fenix.deferralFor(stakerAddress, 0).stakeId, 0);
     }
 
     /// Helpers

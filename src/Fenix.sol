@@ -102,14 +102,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         deferStake(stakeIdx, stakerAddress);
     }
 
-    function stakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
-        return stakes[stakerAddress][stakeIndex];
-    }
-
-    function stakeCount(address stakerAddress) public view returns (uint256) {
-        return stakes[stakerAddress].length;
-    }
-
     function calculateBase(uint256 fenix) public pure returns (uint256) {
         return fenix.ln() * 10**DECIMALS;
     }
@@ -163,5 +155,22 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         distributeBigBonus = false;
         uint256 totalSupply = IERC20(xenContractAddress).totalSupply();
         poolSize += totalSupply;
+    }
+
+    // Helper Functions
+    function stakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
+        return stakes[stakerAddress][stakeIndex];
+    }
+
+    function stakeCount(address stakerAddress) public view returns (uint256) {
+        return stakes[stakerAddress].length;
+    }
+
+    function deferralFor(address stakerAddress, uint256 stakeIndex) public view returns (Deferral memory) {
+        return deferrals[stakerAddress][stakeIndex];
+    }
+
+    function deferralCount(address stakerAddress) public view returns (uint256) {
+        return deferrals[stakerAddress].length;
     }
 }
