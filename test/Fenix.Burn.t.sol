@@ -15,6 +15,7 @@ contract FenixBurnTest is Test {
     function setUp() public {
         xenCrypto = new XENCrypto();
         address xenAddress = address(xenCrypto);
+        _generateXEN();
         fenix = new Fenix(xenAddress);
     }
 
@@ -22,10 +23,6 @@ contract FenixBurnTest is Test {
     function testXENBurn() public {
         address userAddr = address(this);
         address fenixAddr = address(fenix);
-        uint256 timestamp = block.timestamp;
-        xenCrypto.claimRank(1);
-        vm.warp(timestamp + (86400 * 1) + 1);
-        xenCrypto.claimMintReward();
         uint256 balancePreBurn = xenCrypto.balanceOf(userAddr);
 
         assertEq(balancePreBurn, 3300 * 1e18);
@@ -39,5 +36,13 @@ contract FenixBurnTest is Test {
 
         assertEq(balancePostBurnXEN, 0);
         assertEq(balancePostBurnFENIX, 3300 * 1e18);
+    }
+
+    /// Helpers
+    function _generateXEN() public {
+        uint256 timestamp = block.timestamp;
+        xenCrypto.claimRank(1);
+        vm.warp(timestamp + (86400 * 1) + 1);
+        xenCrypto.claimMintReward();
     }
 }

@@ -15,6 +15,7 @@ contract FenixTest is Test {
     function setUp() public {
         xenCrypto = new XENCrypto();
         address xenAddress = address(xenCrypto);
+        _generateXEN();
         fenix = new Fenix(xenAddress);
     }
 
@@ -148,14 +149,11 @@ contract FenixTest is Test {
         assertEq(penalty200, 1000000000000000000); // verify end day 360, 100% penalty
     }
 
-    function testBigBonus() public {
+    /// Helpers
+    function _generateXEN() public {
         uint256 timestamp = block.timestamp;
         xenCrypto.claimRank(1);
         vm.warp(timestamp + (86400 * 1) + 1);
         xenCrypto.claimMintReward();
-
-        fenix.bigBonus();
-
-        assertEq(fenix.poolSize(), 3300000000000000000000);
     }
 }

@@ -43,8 +43,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public poolSize = 0;
     uint256 public currentStakeId = 0;
 
-    bool public distributeBigBonus = true;
-
     mapping(address => Stake[]) public stakes;
     mapping(address => Deferral[]) public deferrals;
 
@@ -53,6 +51,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
         xenContractAddress = xenAddress;
         startTs = block.timestamp;
+        poolSize = IERC20(xenContractAddress).totalSupply();
     }
 
     // IBurnRedeemable
@@ -148,13 +147,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(block.timestamp >= stake.startTs, "Stake not started");
         require(block.timestamp >= endTs, "Stake is active");
         return stake.base + stake.bonus;
-    }
-
-    function bigBonus() public {
-        require(distributeBigBonus, "Big bonus already distributed");
-        distributeBigBonus = false;
-        uint256 totalSupply = IERC20(xenContractAddress).totalSupply();
-        poolSize += totalSupply;
     }
 
     // Helper Functions

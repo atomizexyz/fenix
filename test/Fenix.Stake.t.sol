@@ -15,6 +15,7 @@ contract FenixStakeTest is Test {
     function setUp() public {
         xenCrypto = new XENCrypto();
         address xenAddress = address(xenCrypto);
+        _generateXEN();
         fenix = new Fenix(xenAddress);
     }
 
@@ -72,5 +73,13 @@ contract FenixStakeTest is Test {
         xenCrypto.approve(fenixAddr, balancePreBurn);
 
         fenix.burnXEN(balancePreBurn);
+    }
+
+    /// Helpers
+    function _generateXEN() public {
+        uint256 timestamp = block.timestamp;
+        xenCrypto.claimRank(1);
+        vm.warp(timestamp + (86400 * 1) + 1);
+        xenCrypto.claimMintReward();
     }
 }
