@@ -31,43 +31,43 @@ contract FenixTest is Test {
     function testCalculateBase() public {
         uint256 burn1xen = 1e18;
         uint256 ln1xen = fenix.calculateBase(burn1xen);
-        assertEq(ln1xen, 0); // verify ln(1) = 0
+        assertEq(ln1xen, 1000000000000000000); // verify
 
         uint256 burn10xen = 1e19;
         uint256 ln10xen = fenix.calculateBase(burn10xen);
-        assertEq(ln10xen, 2302585092994045674000000000000000000); // verify ln(10)
+        assertEq(ln10xen, 10000000000000000000); // verify
 
         uint256 burn100xen = 1e20;
         uint256 ln100xen = fenix.calculateBase(burn100xen);
-        assertEq(ln100xen, 4605170185988091359000000000000000000); // verify ln(100)
+        assertEq(ln100xen, 100000000000000000000); // verify
     }
 
     /// @notice Test calculating size bonus
     function testCalculateSizeBonus() public {
         uint256 burn1xen = 1 * 1e18;
         uint256 bonus1Xen = fenix.calculateBonus(burn1xen, 1);
-        assertEq(bonus1Xen, 0); // verify 1 xen stake no bonus
+        assertEq(bonus1Xen, 549450549450549); // verify
 
         uint256 burn2xen = 2 * 1e18;
         uint256 bonus2Xen = fenix.calculateBonus(burn2xen, 1);
-        assertEq(bonus2Xen, 380850099208802238809962102366776); // verify 2 xen stake bonus
+        assertEq(bonus2Xen, 1098901098901098); // verify
 
         uint256 burn3xen = 3 * 1e18;
         uint256 bonus3Xen = fenix.calculateBonus(burn3xen, 1);
-        assertEq(bonus3Xen, 603633125641860046074007004026814); // verify 2 xen stake bonus
+        assertEq(bonus3Xen, 1648351648351648); // verify
     }
 
     /// @notice Test calculating time bonus
     function testCalculateTimeBonus() public {
         uint256 burnxen = 3 * 1e18;
         uint256 bonus356Days = fenix.calculateBonus(burnxen, 365);
-        assertEq(bonus356Days, 220326090859263796046074007004026814); // verify 1 xen stake no bonus
+        assertEq(bonus356Days, 601648351648351648); // verify
 
         uint256 bonus3560Days = fenix.calculateBonus(burnxen, 3650);
-        assertEq(bonus3560Days, 2203260908592637586595524556454576265); // verify 2 xen stake bonus
+        assertEq(bonus3560Days, 6016483516483516483); // verify
 
         uint256 bonus35600Days = fenix.calculateBonus(burnxen, 36500);
-        assertEq(bonus35600Days, 22032609085926375492090030050960070770); // verify 2 xen stake bonus
+        assertEq(bonus35600Days, 60164835164835164835); // verify
     }
 
     /// @notice Test share rate update
@@ -76,10 +76,10 @@ contract FenixTest is Test {
         uint256 bonus = 2.77069 * 1e18;
         Stake memory stake1 = Stake(0, 1, 1, base, bonus, base + bonus);
 
-        assertEq(fenix.shareRate(), 1000000000000000000); // verify initial share rate
+        assertEq(fenix.shareRate(), 1000000000000000000); // verify
 
         fenix.updateEquity(stake1);
-        assertEq(fenix.shareRate(), 1200549237776962269); // verify 20% gain
+        assertEq(fenix.shareRate(), 1200549237776962269); // verify
     }
 
     /// @notice Test calculate payout
@@ -92,7 +92,7 @@ contract FenixTest is Test {
 
         vm.warp(timestamp + (86400 * 1));
         uint256 payout = fenix.calculatePayout(stake1);
-        assertEq(payout, 16586200000000000000); // verify max payout
+        assertEq(payout, 16586200000000000000); // verify
     }
 
     /// @notice Test stake penality

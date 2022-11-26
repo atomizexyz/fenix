@@ -30,7 +30,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant ONE_DAY_SECONDS = 86400;
     uint256 internal constant GRACE_PERIOD_DAYS = 28 * ONE_DAY_SECONDS;
     uint256 internal constant END_PENALTY_WEEKS = 7 * 100;
-    uint256 internal constant DECIMALS = 18;
     uint256 internal constant SHARE_RATE_SCALE = 1e5;
     uint256 internal constant TIME_BONUS = 1_820;
     uint256 internal constant MIN_BONUS = 1e19;
@@ -102,14 +101,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     }
 
     function calculateBase(uint256 fenix) public pure returns (uint256) {
-        return fenix.ln() * 10**DECIMALS;
+        return fenix;
     }
 
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
         uint256 base = calculateBase(fenix);
         uint256 timeBonus = (base * term) / TIME_BONUS;
         if (base > MIN_BONUS) {
-            uint256 sizeBonus = base.ln();
+            uint256 sizeBonus = base;
             return timeBonus + sizeBonus;
         } else {
             return timeBonus;
