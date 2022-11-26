@@ -59,23 +59,14 @@ contract FenixStakeTest is Test {
     }
 
     /// Helpers
-
     function _getFenixFor(address user) public {
         address userAddress = address(user);
         address fenixAddr = address(fenix);
-        uint256 timestamp = block.timestamp;
-        xenCrypto.claimRank(1);
-        vm.warp(timestamp + (86400 * 1) + 1);
-        xenCrypto.claimMintReward();
-
         uint256 balancePreBurn = xenCrypto.balanceOf(userAddress);
-
         xenCrypto.approve(fenixAddr, balancePreBurn);
-
         fenix.burnXEN(balancePreBurn);
     }
 
-    /// Helpers
     function _generateXEN() public {
         uint256 timestamp = block.timestamp;
         xenCrypto.claimRank(1);
