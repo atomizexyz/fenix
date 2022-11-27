@@ -35,8 +35,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant MIN_BONUS = 1e19;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
-    uint256 internal ANNUAL_INFLATION_RATE = PRBMathUD60x18.pi() * 1e6;
 
+    uint256 internal annualInflationRate = PRBMathUD60x18.pi() * 1e6;
     address public xenContractAddress;
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
@@ -90,7 +90,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         uint40 endTs = uint40(block.timestamp + (term * ONE_DAY_SECONDS));
         if (endTs > maxInflationEndTs) {
-            poolSupply = poolSupply * (1e18 + ANNUAL_INFLATION_RATE)**(term / 365);
+            poolSupply = poolSupply * (1e18 + annualInflationRate)**(term / 365);
             maxInflationEndTs = endTs;
         }
 
