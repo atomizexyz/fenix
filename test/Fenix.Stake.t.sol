@@ -44,14 +44,14 @@ contract FenixStakeTest is Test {
 
     /// @notice Test deferring early stake
     function testDeferEarlyStake() public {
-        uint256 term = 100;
+        uint256 deferTerm = 100;
         address stakerAddress = address(this);
         _getFenixFor(stakerAddress);
 
         uint256 fenixBalance = fenix.balanceOf(address(this));
-        fenix.startStake(fenixBalance, term);
+        fenix.startStake(fenixBalance, deferTerm);
 
-        vm.warp(block.timestamp + (86400 * term));
+        vm.warp(block.timestamp + (86400 * deferTerm));
         fenix.deferStake(0, stakerAddress);
 
         assertEq(fenix.deferralCount(stakerAddress), 1);
@@ -61,31 +61,34 @@ contract FenixStakeTest is Test {
 
     /// @notice Test deferring late stake
     function testDeferLateStake() public {
-        uint256 term = 100;
+        uint256 deferTerm = 100;
+        uint256 endTerm = 200;
         address stakerAddress = address(this);
         _getFenixFor(stakerAddress);
 
         uint256 fenixBalance = fenix.balanceOf(address(this));
-        fenix.startStake(fenixBalance, term);
+        fenix.startStake(fenixBalance, deferTerm);
 
-        vm.warp(block.timestamp + (86400 * term) + 1);
+        vm.warp(block.timestamp + (86400 * deferTerm) + 1);
         fenix.deferStake(0, stakerAddress);
 
         assertEq(fenix.deferralCount(stakerAddress), 1);
         assertEq(fenix.deferralFor(stakerAddress, 0).stakeId, 0);
         assertEq(fenix.deferralFor(stakerAddress, 0).payout, 6781318681318681318681);
+
+        vm.warp(block.timestamp + (86400 * endTerm));
     }
 
     /// @notice Test ending early stake
     function testEndingEarlyStake() public {
-        uint256 term = 100;
+        uint256 endTerm = 100;
         address stakerAddress = address(this);
         _getFenixFor(stakerAddress);
 
         uint256 fenixBalance = fenix.balanceOf(address(this));
-        fenix.startStake(fenixBalance, term);
+        fenix.startStake(fenixBalance, endTerm);
 
-        vm.warp(block.timestamp + (86400 * term));
+        vm.warp(block.timestamp + (86400 * endTerm));
         fenix.endStake(0);
 
         uint256 fenixPayoutBalance = fenix.balanceOf(address(this));
