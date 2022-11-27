@@ -76,6 +76,23 @@ contract FenixStakeTest is Test {
         assertEq(fenix.deferralFor(stakerAddress, 0).payout, 6781318681318681318681);
     }
 
+    /// @notice Test ending early stake
+    function testEndingEarlyStake() public {
+        uint256 term = 100;
+        address stakerAddress = address(this);
+        _getFenixFor(stakerAddress);
+
+        uint256 fenixBalance = fenix.balanceOf(address(this));
+        fenix.startStake(fenixBalance, term);
+
+        vm.warp(block.timestamp + (86400 * term));
+        fenix.endStake(0);
+
+        uint256 fenixPayoutBalance = fenix.balanceOf(address(this));
+
+        assertEq(fenixPayoutBalance, 10081318681318681318681);
+    }
+
     /// Helpers
     function _getFenixFor(address user) public {
         address userAddress = address(user);

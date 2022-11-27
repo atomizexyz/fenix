@@ -35,12 +35,18 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant MIN_BONUS = 1e19;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
+    uint256 internal constant ANNUAL_INFLATION_RATE = 3_141_592; // pi * 1e6
 
     address public xenContractAddress;
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
 
+    uint256 public maxInflationEndTs = 0;
+
     uint256 public poolSupply = 0;
+    uint256 public poolTotalShares = 0;
+    uint256 public poolTotalStakes = 0;
+
     uint256 public currentStakeId = 0;
 
     mapping(address => Stake[]) public stakes;
@@ -81,6 +87,16 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         Stake memory _stake = Stake(uint40(block.timestamp), currentStakeId, term, base, bonus, equity);
         stakes[msg.sender].push(_stake);
+
+        uint40 endTs = uint40(block.timestamp + (term * ONE_DAY_SECONDS));
+        if (endTs > maxInflationEndTs) {
+            poolSupply = poolSupply * (1e18 + ANNUAL_INFLATION_RATE)**(term / 365);
+            maxInflationEndTs = endTs;
+        }
+
+        poolTotalShares += equity;
+
+        ++poolTotalStakes;
         ++currentStakeId;
     }
 
@@ -91,13 +107,10 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         // Calculate payout
         uint256 payout = poolSupply;
-        console.log(_stake.startTs + (_stake.term * ONE_DAY_SECONDS), block.timestamp);
         if (block.timestamp > _stake.startTs + (_stake.term * ONE_DAY_SECONDS)) {
             payout = payout * calculateLatePenalty(_stake);
-            console.log("late payout:", payout);
         } else {
             payout = payout * calculateEarlyPenalty(_stake);
-            console.log("early payout:", payout);
         }
 
         Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base + _stake.bonus);
@@ -107,10 +120,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         stakes[stakerAddress] = _stakesList;
         deferrals[stakerAddress].push(deferral);
+
+        --poolTotalStakes;
     }
 
-    function endStake(uint256 stakeIdx, address stakerAddress) public {
-        deferStake(stakeIdx, stakerAddress);
+    function endStake(uint256 stakeIdx) public {
+        deferStake(stakeIdx, msg.sender);
+        Deferral memory deferral = deferrals[msg.sender][stakeIdx];
+        _mint(msg.sender, deferral.payout);
     }
 
     function calculateBase(uint256 fenix) public pure returns (uint256) {
