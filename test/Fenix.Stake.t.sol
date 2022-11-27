@@ -42,8 +42,8 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(stakerAddress, 1).stakeId, 1);
     }
 
-    /// @notice Test deferring stake
-    function testDeferStake() public {
+    /// @notice Test deferring early stake
+    function testDeferEarlyStake() public {
         uint256 term = 100;
         address stakerAddress = address(this);
         _getFenixFor(stakerAddress);
@@ -56,6 +56,24 @@ contract FenixStakeTest is Test {
 
         assertEq(fenix.deferralCount(stakerAddress), 1);
         assertEq(fenix.deferralFor(stakerAddress, 0).stakeId, 0);
+        assertEq(fenix.deferralFor(stakerAddress, 0).payout, 6781318681318681318681);
+    }
+
+    /// @notice Test deferring late stake
+    function testDeferLateStake() public {
+        uint256 term = 100;
+        address stakerAddress = address(this);
+        _getFenixFor(stakerAddress);
+
+        uint256 fenixBalance = fenix.balanceOf(address(this));
+        fenix.startStake(fenixBalance, term);
+
+        vm.warp(block.timestamp + (86400 * term) + 1);
+        fenix.deferStake(0, stakerAddress);
+
+        assertEq(fenix.deferralCount(stakerAddress), 1);
+        assertEq(fenix.deferralFor(stakerAddress, 0).stakeId, 0);
+        assertEq(fenix.deferralFor(stakerAddress, 0).payout, 6781318681318681318681);
     }
 
     /// Helpers

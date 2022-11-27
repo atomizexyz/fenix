@@ -21,7 +21,7 @@ struct Stake {
 struct Deferral {
     uint40 deferralTs;
     uint256 stakeId;
-    uint256 amount;
+    uint256 payout;
 }
 
 contract Fenix is ERC20, IBurnRedeemable, IERC165 {
@@ -39,7 +39,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     address public xenContractAddress;
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
-    uint256 public poolSize = 0;
+
+    uint256 public poolSupply = 0;
     uint256 public currentStakeId = 0;
 
     mapping(address => Stake[]) public stakes;
@@ -50,7 +51,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
         xenContractAddress = xenAddress;
         startTs = block.timestamp;
-        poolSize = IERC20(xenContractAddress).totalSupply();
+
+        poolSupply = IERC20(xenContractAddress).totalSupply();
     }
 
     // IBurnRedeemable
@@ -85,7 +87,18 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     function deferStake(uint256 stakeIdx, address stakerAddress) public {
         Stake[] storage _stakesList = stakes[stakerAddress];
         Stake storage _stake = _stakesList[stakeIdx];
-        require(_stake.stakeId >= 0, "Stake not found");
+        require(_stake.stakeId >= 0, "stake not found");
+
+        // Calculate payout
+        uint256 payout = poolSupply;
+        console.log(_stake.startTs + (_stake.term * ONE_DAY_SECONDS), block.timestamp);
+        if (block.timestamp > _stake.startTs + (_stake.term * ONE_DAY_SECONDS)) {
+            payout = payout * calculateLatePenalty(_stake);
+            console.log("late payout:", payout);
+        } else {
+            payout = payout * calculateEarlyPenalty(_stake);
+            console.log("early payout:", payout);
+        }
 
         Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base + _stake.bonus);
 
