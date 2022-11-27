@@ -28,11 +28,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     using PRBMathUD60x18 for uint256;
 
     uint256 internal constant ONE_DAY_SECONDS = 86400;
-    uint256 internal constant GRACE_PERIOD_DAYS = 28 * ONE_DAY_SECONDS;
     uint256 internal constant END_PENALTY_WEEKS = 7 * 100;
     uint256 internal constant SHARE_RATE_SCALE = 1e5;
     uint256 internal constant TIME_BONUS = 1_820;
-    uint256 internal constant MIN_BONUS = 1e19;
+    uint256 internal constant ONE_YEAR_DAYS = 356;
+
+    uint256 internal constant ONE = 1e18;
+    uint256 internal constant TEN = 10 * 1e18;
+
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS = 180 * ONE_DAY_SECONDS;
     uint256 internal constant ONE_EIGHTY_DAYS_SECONDS_CUBED = ONE_EIGHTY_DAYS_SECONDS**3;
 
@@ -90,7 +93,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         uint40 endTs = uint40(block.timestamp + (term * ONE_DAY_SECONDS));
         if (endTs > maxInflationEndTs) {
-            poolSupply = poolSupply * (1e18 + annualInflationRate)**(term / 365);
+            poolSupply = poolSupply * (ONE + annualInflationRate)**(term / ONE_YEAR_DAYS);
             maxInflationEndTs = endTs;
         }
 
@@ -137,7 +140,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
         uint256 base = calculateBase(fenix);
         uint256 timeBonus = (base * term) / TIME_BONUS;
-        if (base > MIN_BONUS) {
+        if (base > TEN) {
             uint256 sizeBonus = base;
             return timeBonus + sizeBonus;
         } else {
@@ -165,7 +168,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(block.timestamp >= stake.startTs, "Stake not started");
         require(block.timestamp >= endTs, "Stake is active");
         uint256 lateDays = block.timestamp - endTs;
-        if (lateDays > ONE_EIGHTY_DAYS_SECONDS) return 1e18;
+        if (lateDays > ONE_EIGHTY_DAYS_SECONDS) return ONE;
         return (lateDays**3).div(ONE_EIGHTY_DAYS_SECONDS_CUBED);
     }
 
