@@ -105,23 +105,23 @@ contract FenixTest is Test {
 
         vm.warp(timestamp + (86400 * 0));
         uint256 penalty0 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty0, 0); // verify 0% complete 0% return
+        assertEq(penalty0, 1000000000000000000); // verify 100% penalty
 
         vm.warp(timestamp + (86400 * 25));
         uint256 penalty25 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty25, 1036637500000000000); // verify 25% complete 6.25% return
+        assertEq(penalty25, 937500000000000000); // verify 94% penalty
 
         vm.warp(timestamp + (86400 * 50));
         uint256 penalty50 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty50, 4146550000000000000); // verify 50% complete 25% return
+        assertEq(penalty50, 750000000000000000); // verify 75% penalty
 
         vm.warp(timestamp + (86400 * 75));
         uint256 penalty75 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty75, 9329737500000000000); // verify 75% complete 56.25% return
+        assertEq(penalty75, 437500000000000000); // verify 43% penalty
 
         vm.warp(timestamp + (86400 * 100));
         uint256 penalty100 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty100, 16586200000000000000); // verify 100% complete 100% return
+        assertEq(penalty100, 0); // verify 0% penalty
     }
 
     function testCalculateLatePenalty() public {
@@ -134,19 +134,19 @@ contract FenixTest is Test {
 
         vm.warp(timestamp + (86400 * baseTerm));
         uint256 penalty0 = fenix.calculateLatePenalty(stake1);
-        assertEq(penalty0, 0); // verify end day 0, 0% penality
+        assertEq(penalty0, 0); // verify 0% penalty
 
         vm.warp(timestamp + (86400 * (baseTerm + 90)));
         uint256 penalty50 = fenix.calculateLatePenalty(stake1);
-        assertEq(penalty50, 125000000000000000); // end day 90, 12.5% penality
+        assertEq(penalty50, 125000000000000000); // verify 12.5% penality
 
         vm.warp(timestamp + (86400 * (baseTerm + 180)));
         uint256 penalty100 = fenix.calculateLatePenalty(stake1);
-        assertEq(penalty100, 1000000000000000000); // verify end day 180, 100% penalty
+        assertEq(penalty100, 1000000000000000000); // verify 100% penalty
 
         vm.warp(timestamp + (86400 * (baseTerm + 360)));
         uint256 penalty200 = fenix.calculateLatePenalty(stake1);
-        assertEq(penalty200, 1000000000000000000); // verify end day 360, 100% penalty
+        assertEq(penalty200, 1000000000000000000); // verify 100% penalty
     }
 
     /// Helpers

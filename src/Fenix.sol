@@ -127,9 +127,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(block.timestamp >= stake.startTs, "Stake not started");
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 percent = termDelta.div(stake.term * ONE_DAY_SECONDS);
-        uint256 percentAdjusted = percent.powu(2);
-        uint256 penalty = ((stake.base + stake.bonus) * percentAdjusted) / 1e18;
-        return penalty;
+        return 1e18 - percent.powu(2);
     }
 
     function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
