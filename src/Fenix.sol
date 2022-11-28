@@ -87,9 +87,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     function startStake(uint256 fenix, uint256 term) public {
         uint256 base = calculateBase(fenix);
         uint256 bonus = calculateBonus(fenix, term);
-        uint256 equity = base + bonus;
+        uint256 shares = base + bonus;
 
-        Stake memory _stake = Stake(block.timestamp, currentStakeId, term, base, bonus, equity);
+        Stake memory _stake = Stake(block.timestamp, currentStakeId, term, base, bonus, shares);
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
@@ -101,10 +101,11 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             maxInflationEndTs = endTs;
         }
 
-        poolTotalShares += equity;
+        poolTotalShares += shares;
 
         ++poolTotalStakes;
         ++currentStakeId;
+        _burn(msg.sender, fenix);
     }
 
     function deferStake(uint256 stakeIdx, address stakerAddress) public {
@@ -112,16 +113,18 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         Stake storage _stake = _stakesList[stakeIdx];
         require(_stake.stakeId >= 0, "stake not found");
 
+        uint256 stakeShares = _stake.shares;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
-
-        // Calculate payout
         uint256 payout = 0;
+        uint256 poolEquity = stakeShares.div(poolTotalShares);
+        uint256 equitySupply = poolSupply.mul(poolEquity);
 
         if (block.timestamp > endTs) {
-            payout = poolSupply - (poolSupply * calculateLatePenalty(_stake));
+            payout = (equitySupply - (equitySupply * calculateLatePenalty(_stake)));
         } else {
-            payout = poolSupply - (poolSupply * calculateEarlyPenalty(_stake));
+            payout = (equitySupply - (equitySupply * calculateEarlyPenalty(_stake)));
         }
+
         Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, payout);
 
         _stakesList[stakeIdx] = _stakesList[_stakesList.length - 1];
@@ -129,6 +132,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         stakes[stakerAddress] = _stakesList;
         deferrals[stakerAddress].push(deferral);
+
+        poolTotalShares -= stakeShares;
+        poolSupply -= payout;
 
         --poolTotalStakes;
     }

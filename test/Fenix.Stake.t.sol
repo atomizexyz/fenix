@@ -101,12 +101,40 @@ contract FenixStakeTest is Test {
 
         uint256 fenixPayoutBalance = fenix.balanceOf(bob);
 
-        assertEq(fenixPayoutBalance, 46173844885099801535056);
+        assertEq(fenixPayoutBalance, 38511844885099801535056);
     }
 
     /// @notice Test multiple stakes
-    function testMultipleStakes() public {
+    function testMultipleStakes_SymmetricSplit() public {
+        uint256 endTerm = 100;
+
         _getFenixFor(stakers);
+
+        // start stakes
+
+        uint256 bobFenixBalance = fenix.balanceOf(bob);
+        vm.prank(bob);
+        fenix.startStake(bobFenixBalance, endTerm);
+
+        uint256 aliceFenixBalance = fenix.balanceOf(alice);
+        vm.prank(alice);
+        fenix.startStake(aliceFenixBalance, endTerm);
+
+        vm.warp(block.timestamp + (86400 * endTerm));
+
+        // end stakes
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        vm.prank(alice);
+        fenix.endStake(0);
+
+        // check payouts
+        uint256 bobPayout = fenix.balanceOf(bob);
+        uint256 alicePayout = fenix.balanceOf(alice);
+
+        assertEq(bobPayout, 20689787933644277026303);
+        assertEq(alicePayout, 17822056951455524508753);
     }
 
     /// Helpers
