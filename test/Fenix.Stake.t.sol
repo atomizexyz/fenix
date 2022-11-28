@@ -10,13 +10,13 @@ contract FenixStakeTest is Test {
     Fenix internal fenix;
     XENCrypto internal xenCrypto;
 
-    address[] internal stakers = new address[](5);
-
     address internal bob = address(this);
     address internal alice = vm.addr(1);
     address internal carol = vm.addr(2);
     address internal dan = vm.addr(3);
     address internal frank = vm.addr(4);
+
+    address[] internal stakers;
 
     /// ============ Setup test suite ============
 
@@ -24,11 +24,11 @@ contract FenixStakeTest is Test {
         xenCrypto = new XENCrypto();
         address xenAddress = address(xenCrypto);
 
-        stakers[0] = bob;
-        stakers[1] = alice;
-        stakers[2] = carol;
-        stakers[3] = dan;
-        stakers[4] = frank;
+        stakers.push(bob);
+        stakers.push(alice);
+        stakers.push(carol);
+        stakers.push(dan);
+        stakers.push(frank);
 
         _generateXENFor(stakers);
         fenix = new Fenix(xenAddress);
@@ -69,13 +69,12 @@ contract FenixStakeTest is Test {
 
         assertEq(fenix.deferralCount(bob), 1);
         assertEq(fenix.deferralFor(bob, 0).stakeId, 0);
-        assertEq(fenix.deferralFor(bob, 0).payout, 15744989010989010989010);
+        assertEq(fenix.deferralFor(bob, 0).payout, 38511844885099801535056);
     }
 
     /// @notice Test deferring late stake
     function testDeferLateStake() public {
         uint256 deferTerm = 100;
-        uint256 endTerm = 200;
         _getFenixFor(stakers);
 
         uint256 fenixBalance = fenix.balanceOf(address(this));
@@ -86,9 +85,7 @@ contract FenixStakeTest is Test {
 
         assertEq(fenix.deferralCount(bob), 1);
         assertEq(fenix.deferralFor(bob, 0).stakeId, 0);
-        assertEq(fenix.deferralFor(bob, 0).payout, 15744989010989010989010);
-
-        vm.warp(block.timestamp + (86400 * endTerm));
+        assertEq(fenix.deferralFor(bob, 0).payout, 38511844885099801535056);
     }
 
     /// @notice Test ending early stake
@@ -104,7 +101,7 @@ contract FenixStakeTest is Test {
 
         uint256 fenixPayoutBalance = fenix.balanceOf(address(this));
 
-        assertEq(fenixPayoutBalance, 23406989010989010989010);
+        assertEq(fenixPayoutBalance, 46173844885099801535056);
     }
 
     /// @notice Test multiple stakes
