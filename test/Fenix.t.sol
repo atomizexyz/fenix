@@ -46,28 +46,28 @@ contract FenixTest is Test {
     function testCalculateSizeBonus() public {
         uint256 burn1xen = 1 * 1e18;
         uint256 bonus1Xen = fenix.calculateBonus(burn1xen, 1);
-        assertEq(bonus1Xen, 549450549450549); // verify
+        assertEq(bonus1Xen, 48472527472527472527); // verify
 
         uint256 burn2xen = 2 * 1e18;
         uint256 bonus2Xen = fenix.calculateBonus(burn2xen, 1);
-        assertEq(bonus2Xen, 1098901098901098); // verify
+        assertEq(bonus2Xen, 96945054945054945054); // verify
 
         uint256 burn3xen = 3 * 1e18;
         uint256 bonus3Xen = fenix.calculateBonus(burn3xen, 1);
-        assertEq(bonus3Xen, 1648351648351648); // verify
+        assertEq(bonus3Xen, 145417582417582417582); // verify
     }
 
     /// @notice Test calculating time bonus
     function testCalculateTimeBonus() public {
         uint256 burnxen = 3 * 1e18;
         uint256 bonus356Days = fenix.calculateBonus(burnxen, 365);
-        assertEq(bonus356Days, 601648351648351648); // verify
+        assertEq(bonus356Days, 51985417582417582417582); // verify
 
         uint256 bonus3560Days = fenix.calculateBonus(burnxen, 3650);
-        assertEq(bonus3560Days, 6016483516483516483); // verify
+        assertEq(bonus3560Days, 519827175824175824175824); // verify
 
         uint256 bonus35600Days = fenix.calculateBonus(burnxen, 36500);
-        assertEq(bonus35600Days, 60164835164835164835); // verify
+        assertEq(bonus35600Days, 5198244758241758241758241); // verify
     }
 
     /// @notice Test share rate update

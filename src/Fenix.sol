@@ -150,14 +150,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     }
 
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        uint256 base = calculateBase(fenix);
-        uint256 timeBonus = (base * term) / TIME_BONUS;
-        if (base > TEN) {
-            uint256 sizeBonus = base;
-            return timeBonus + sizeBonus;
-        } else {
-            return timeBonus;
-        }
+        uint256 sizeBonus = calculateBase(fenix);
+        uint256 timeBonus = (sizeBonus * (term * ONE_DAY_SECONDS)) / TIME_BONUS;
+        return timeBonus + sizeBonus;
     }
 
     function updateEquity(Stake memory stake) public {
