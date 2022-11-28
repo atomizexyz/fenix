@@ -172,13 +172,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return (lateDays**3).div(ONE_EIGHTY_DAYS_SECONDS_CUBED);
     }
 
-    function calculatePayout(Stake memory stake) public view returns (uint256) {
-        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
-        require(block.timestamp >= stake.startTs, "Stake not started");
-        require(block.timestamp >= endTs, "Stake is active");
-        return stake.base + stake.bonus;
-    }
-
     // Helper Functions
     function stakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
         return stakes[stakerAddress][stakeIndex];
