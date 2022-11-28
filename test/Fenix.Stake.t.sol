@@ -38,7 +38,7 @@ contract FenixStakeTest is Test {
     function testStartStakes() public {
         _getFenixFor(stakers);
 
-        uint256 fenixBalance = fenix.balanceOf(address(this));
+        uint256 fenixBalance = fenix.balanceOf(bob);
         uint256 feinxHalfBalance = fenixBalance / 2;
 
         assertEq(fenix.currentStakeId(), 0);
@@ -61,7 +61,7 @@ contract FenixStakeTest is Test {
         uint256 deferTerm = 100;
         _getFenixFor(stakers);
 
-        uint256 fenixBalance = fenix.balanceOf(address(this));
+        uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, deferTerm);
 
         vm.warp(block.timestamp + (86400 * deferTerm));
@@ -77,7 +77,7 @@ contract FenixStakeTest is Test {
         uint256 deferTerm = 100;
         _getFenixFor(stakers);
 
-        uint256 fenixBalance = fenix.balanceOf(address(this));
+        uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, deferTerm);
 
         vm.warp(block.timestamp + (86400 * deferTerm) + 1);
@@ -93,13 +93,13 @@ contract FenixStakeTest is Test {
         uint256 endTerm = 100;
         _getFenixFor(stakers);
 
-        uint256 fenixBalance = fenix.balanceOf(address(this));
+        uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, endTerm);
 
         vm.warp(block.timestamp + (86400 * endTerm));
         fenix.endStake(0);
 
-        uint256 fenixPayoutBalance = fenix.balanceOf(address(this));
+        uint256 fenixPayoutBalance = fenix.balanceOf(bob);
 
         assertEq(fenixPayoutBalance, 46173844885099801535056);
     }
