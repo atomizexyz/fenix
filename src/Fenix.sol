@@ -21,6 +21,7 @@ struct Stake {
 struct Deferral {
     uint256 deferralTs;
     uint256 stakeId;
+    uint256 base;
     uint256 payout;
 }
 
@@ -122,7 +123,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             payout = (equitySupply - (equitySupply * calculateEarlyPenalty(_stake)));
         }
 
-        Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, payout);
+        Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base, payout);
 
         _stakesList[stakeIdx] = _stakesList[_stakesList.length - 1];
         _stakesList.pop();
@@ -138,8 +139,12 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     function endStake(uint256 stakeIdx) public {
         deferStake(stakeIdx, msg.sender);
-        Deferral memory deferral = deferrals[msg.sender][stakeIdx];
-        _mint(msg.sender, deferral.payout);
+        Deferral memory _deferral = deferrals[msg.sender][stakeIdx];
+        _mint(msg.sender, _deferral.payout);
+        uint256 returnOnStake = _deferral.payout.div(_deferral.base);
+        if (returnOnStake > shareRate) {
+            shareRate = returnOnStake;
+        }
     }
 
     function calculateBase(uint256 fenix) public pure returns (uint256) {
@@ -150,14 +155,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 sizeBonus = calculateBase(fenix);
         uint256 timeBonus = (sizeBonus * (term * ONE_DAY_SECONDS)) / TIME_BONUS;
         return timeBonus + sizeBonus;
-    }
-
-    function updateShare(Stake memory stake) public {
-        uint256 roi = 1e18 + stake.bonus.div(stake.base);
-
-        if (roi > shareRate) {
-            shareRate = roi;
-        }
     }
 
     function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {

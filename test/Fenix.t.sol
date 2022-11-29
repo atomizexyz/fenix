@@ -79,18 +79,6 @@ contract FenixTest is Test {
         assertEq(bonus35600Days, 5198244758241758241758241); // verify
     }
 
-    /// @notice Test share rate update
-    function testShareReateUpdate() public {
-        uint256 base = 13.81551 * 1e18;
-        uint256 bonus = 2.77069 * 1e18;
-        Stake memory stake1 = Stake(0, 1, 1, base, bonus, base + bonus);
-
-        assertEq(fenix.shareRate(), 1000000000000000000); // verify
-
-        fenix.updateShare(stake1);
-        assertEq(fenix.shareRate(), 1200549237776962269); // verify
-    }
-
     /// @notice Test stake penality
     function testCalculateEarlyPenalty() public {
         uint256 base = 13.81551 * 1e18;
