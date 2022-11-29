@@ -5,8 +5,10 @@ import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { Fenix, Stake } from "src/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
+import { HelpersTest } from "./Helpers.t.sol";
 
 contract FenixStakeTest is Test {
+    HelpersTest internal helper;
     Fenix internal fenix;
     XENCrypto internal xenCrypto;
 
@@ -21,6 +23,7 @@ contract FenixStakeTest is Test {
     /// ============ Setup test suite ============
 
     function setUp() public {
+        helper = new HelpersTest();
         xenCrypto = new XENCrypto();
         address xenAddress = address(xenCrypto);
 
@@ -30,13 +33,13 @@ contract FenixStakeTest is Test {
         stakers.push(dan);
         stakers.push(frank);
 
-        _generateXENFor(stakers);
+        helper.generateXENFor(stakers, xenCrypto);
         fenix = new Fenix(xenAddress);
     }
 
     /// @notice Test starting stake works
     function testStartStakes() public {
-        _getFenixFor(stakers);
+        helper.getFenixFor(stakers, fenix, xenCrypto);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         uint256 feinxHalfBalance = fenixBalance / 2;
@@ -58,8 +61,8 @@ contract FenixStakeTest is Test {
 
     /// @notice Test deferring early stake
     function testDeferEarlyStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 deferTerm = 100;
-        _getFenixFor(stakers);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, deferTerm);
@@ -74,8 +77,8 @@ contract FenixStakeTest is Test {
 
     /// @notice Test deferring late stake
     function testDeferLateStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
-        _getFenixFor(stakers);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
@@ -88,10 +91,15 @@ contract FenixStakeTest is Test {
         assertEq(fenix.deferralFor(bob, 0).payout, 38511844885099801535056);
     }
 
+    /// @notice Test deferring multiple stakes
+    function testDeferMultipleStakes() public {}
+
+    function testEndingDeferredStake() public {}
+
     /// @notice Test ending early stake
     function testEndingEarlyStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
-        _getFenixFor(stakers);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
@@ -106,9 +114,8 @@ contract FenixStakeTest is Test {
 
     /// @notice Test multiple stakes - Symmetric Split
     function testMultipleStakes_SymmetricSplit() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
-
-        _getFenixFor(stakers);
 
         // start stakes
 
@@ -139,10 +146,9 @@ contract FenixStakeTest is Test {
 
     /// @notice Test multiple stakes - Assymetric Term
     function testMultipleStakes_AssymetricTerm() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 bobTerm = 100;
         uint256 aliceTerm = 200;
-
-        _getFenixFor(stakers);
 
         uint256 blockTs = block.timestamp;
         // start stakes
@@ -169,38 +175,8 @@ contract FenixStakeTest is Test {
         uint256 bobPayout = fenix.balanceOf(bob);
         uint256 alicePayout = fenix.balanceOf(alice);
 
+        assertTrue(alicePayout > bobPayout);
         assertEq(bobPayout, 30818557111336789579498);
         assertEq(alicePayout, 53082654299957409175161);
-    }
-
-    /// Helpers
-    function _getFenixFor(address[] memory users) public {
-        for (uint256 i = 0; i < users.length; i++) {
-            address userAddress = address(users[i]);
-            address fenixAddr = address(fenix);
-            uint256 balancePreBurn = xenCrypto.balanceOf(userAddress);
-
-            vm.prank(users[i]);
-            xenCrypto.approve(fenixAddr, balancePreBurn);
-
-            vm.prank(users[i]);
-            fenix.burnXEN(balancePreBurn);
-        }
-    }
-
-    function _generateXENFor(address[] memory users) public {
-        uint256 timestamp = block.timestamp;
-
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            xenCrypto.claimRank(1);
-        }
-
-        vm.warp(timestamp + (86400 * 1) + 1);
-
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            xenCrypto.claimMintReward();
-        }
     }
 }

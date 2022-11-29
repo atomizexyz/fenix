@@ -5,17 +5,28 @@ import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { Fenix, Stake } from "src/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
+import { HelpersTest } from "./Helpers.t.sol";
 
 contract FenixTest is Test {
+    HelpersTest internal helper;
     Fenix internal fenix;
     XENCrypto internal xenCrypto;
+
+    address internal bob = address(this);
+
+    address[] internal stakers;
 
     /// ============ Setup test suite ============
 
     function setUp() public {
+        helper = new HelpersTest();
         xenCrypto = new XENCrypto();
+
         address xenAddress = address(xenCrypto);
-        _generateXEN();
+
+        stakers.push(bob);
+
+        helper.generateXENFor(stakers, xenCrypto);
         fenix = new Fenix(xenAddress);
     }
 
@@ -78,7 +89,7 @@ contract FenixTest is Test {
 
         assertEq(fenix.shareRate(), 1000000000000000000); // verify
 
-        fenix.updateEquity(stake1);
+        fenix.updateShare(stake1);
         assertEq(fenix.shareRate(), 1200549237776962269); // verify
     }
 
@@ -134,13 +145,5 @@ contract FenixTest is Test {
         vm.warp(timestamp + (86400 * (baseTerm + 360)));
         uint256 penalty200 = fenix.calculateLatePenalty(stake1);
         assertEq(penalty200, 1000000000000000000); // verify 100% penalty
-    }
-
-    /// Helpers
-    function _generateXEN() public {
-        uint256 timestamp = block.timestamp;
-        xenCrypto.claimRank(1);
-        vm.warp(timestamp + (86400 * 1) + 1);
-        xenCrypto.claimMintReward();
     }
 }

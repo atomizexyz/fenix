@@ -61,7 +61,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
         xenContractAddress = xenAddress;
         startTs = block.timestamp;
-
         poolSupply = IERC20(xenContractAddress).totalSupply();
     }
 
@@ -155,7 +154,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return timeBonus + sizeBonus;
     }
 
-    function updateEquity(Stake memory stake) public {
+    function updateShare(Stake memory stake) public {
         uint256 roi = 1e18 + stake.bonus.div(stake.base);
 
         if (roi > shareRate) {
