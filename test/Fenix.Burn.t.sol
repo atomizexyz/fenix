@@ -22,12 +22,10 @@ contract FenixBurnTest is Test {
         helper = new HelpersTest();
         xenCrypto = new XENCrypto();
 
-        address xenAddress = address(xenCrypto);
-
         stakers.push(bob);
 
         helper.generateXENFor(stakers, xenCrypto);
-        fenix = new Fenix(xenAddress);
+        fenix = new Fenix();
     }
 
     /// @notice Test that the contract can be deployed successfully

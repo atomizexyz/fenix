@@ -27,6 +27,8 @@ struct Deferral {
 contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     using PRBMathUD60x18 for uint256;
 
+    address internal constant XEN_ADDRESS = 0x0C7BBB021d72dB4FfBa37bDF4ef055eECdbc0a29;
+
     uint256 internal constant SCALE_NUMBER = 1e18;
     uint256 internal constant SCALE_FRACTION = 1e6;
 
@@ -39,7 +41,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant ONE_YEAR_DAYS = 365;
     uint256 internal constant TIME_BONUS = 1_820;
 
-    address public xenContractAddress;
     uint256 public startTs = 0;
     uint256 public shareRate = 1 * SCALE_NUMBER;
 
@@ -56,10 +57,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     // Construtor
 
-    constructor(address xenAddress) ERC20("FENIX", "FENIX", 18) {
-        xenContractAddress = xenAddress;
+    constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = block.timestamp;
-        poolSupply = IERC20(xenContractAddress).totalSupply();
+        poolSupply = IERC20(XEN_ADDRESS).totalSupply();
     }
 
     // IBurnRedeemable
@@ -69,14 +69,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     }
 
     function onTokenBurned(address user, uint256 amount) external {
-        require(msg.sender == xenContractAddress, "Burner: wrong caller");
+        require(msg.sender == XEN_ADDRESS, "Burner: wrong caller");
         require(user != address(0), "Burner: zero user address");
         require(amount != 0, "Burner: zero amount");
         _mint(user, amount);
     }
 
     function burnXEN(uint256 xen) public {
-        IBurnableToken(xenContractAddress).burn(msg.sender, xen);
+        IBurnableToken(XEN_ADDRESS).burn(msg.sender, xen);
     }
 
     // Init

@@ -25,7 +25,6 @@ contract FenixStakeTest is Test {
     function setUp() public {
         helper = new HelpersTest();
         xenCrypto = new XENCrypto();
-        address xenAddress = address(xenCrypto);
 
         stakers.push(bob);
         stakers.push(alice);
@@ -34,7 +33,7 @@ contract FenixStakeTest is Test {
         stakers.push(frank);
 
         helper.generateXENFor(stakers, xenCrypto);
-        fenix = new Fenix(xenAddress);
+        fenix = new Fenix();
     }
 
     /// @notice Test starting stake works
