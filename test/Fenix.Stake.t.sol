@@ -61,17 +61,18 @@ contract FenixStakeTest is Test {
     /// @notice Test deferring early stake
     function testDeferEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
-        uint256 deferTerm = 100;
+        uint256 term = 100;
 
         uint256 fenixBalance = fenix.balanceOf(bob);
-        fenix.startStake(fenixBalance, deferTerm);
+        fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * deferTerm));
+        vm.warp(block.timestamp + (86400 * term));
         fenix.deferStake(0, bob);
 
-        assertEq(fenix.deferralCount(bob), 1);
-        assertEq(fenix.deferralFor(bob, 0).stakeId, 0);
-        assertEq(fenix.deferralFor(bob, 0).payout, 38511844885099801535056);
+        assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).payout, 38511844885099801535056);
+        assertEq(fenix.stakeCount(bob), 1);
     }
 
     /// @notice Test deferring late stake
@@ -85,9 +86,10 @@ contract FenixStakeTest is Test {
         vm.warp(block.timestamp + (86400 * term) + 1);
         fenix.deferStake(0, bob);
 
-        assertEq(fenix.deferralCount(bob), 1);
-        assertEq(fenix.deferralFor(bob, 0).stakeId, 0);
-        assertEq(fenix.deferralFor(bob, 0).payout, 38511844885099801535056);
+        assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).payout, 38511844885099801535056);
+        assertEq(fenix.stakeCount(bob), 1);
     }
 
     /// @notice Test deferring multiple stakes
@@ -109,10 +111,11 @@ contract FenixStakeTest is Test {
         uint256 fenixPayoutBalance = fenix.balanceOf(bob);
 
         assertEq(fenixPayoutBalance, 38511844885099801535056);
+        assertEq(fenix.stakeCount(bob), 0);
     }
 
     /// @notice Test multiple stakes - Symmetric Split
-    function testMultipleStakes_SymmetricSplit() public {
+    function testMultipleStakesSymmetricSplit() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
 
@@ -140,11 +143,14 @@ contract FenixStakeTest is Test {
         uint256 alicePayout = fenix.balanceOf(alice);
 
         assertEq(bobPayout, 20689787933644277026303);
+        assertEq(fenix.stakeCount(bob), 0);
+
         assertEq(alicePayout, 17822056951455524508753);
+        assertEq(fenix.stakeCount(alice), 0);
     }
 
     /// @notice Test multiple stakes - Assymetric Term
-    function testMultipleStakes_AssymetricTerm() public {
+    function testMultipleStakesAssymetricTerm() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 bobTerm = 100;
         uint256 aliceTerm = 200;
@@ -176,6 +182,9 @@ contract FenixStakeTest is Test {
 
         assertTrue(alicePayout > bobPayout);
         assertEq(bobPayout, 30818557111336789579498);
+        assertEq(fenix.stakeCount(bob), 0);
+
         assertEq(alicePayout, 53082654299957409175161);
+        assertEq(fenix.stakeCount(alice), 0);
     }
 }

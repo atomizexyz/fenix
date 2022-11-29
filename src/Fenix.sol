@@ -11,17 +11,12 @@ import { console } from "forge-std/console.sol";
 
 struct Stake {
     uint256 startTs;
+    uint256 deferralTs;
     uint256 stakeId;
     uint256 term;
     uint256 base;
     uint256 bonus;
     uint256 shares;
-}
-
-struct Deferral {
-    uint256 deferralTs;
-    uint256 stakeId;
-    uint256 base;
     uint256 payout;
 }
 
@@ -54,7 +49,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public currentStakeId = 0;
 
     mapping(address => Stake[]) public stakes;
-    mapping(address => Deferral[]) public deferrals;
 
     // Construtor
 
@@ -87,7 +81,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 bonus = calculateBonus(fenix, term);
         uint256 shares = base + bonus;
 
-        Stake memory _stake = Stake(block.timestamp, currentStakeId, term, base, bonus, shares);
+        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, base, bonus, shares, 0);
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
@@ -106,10 +100,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         _burn(msg.sender, fenix);
     }
 
-    function deferStake(uint256 stakeIdx, address stakerAddress) public {
+    function deferStake(uint256 stakeIndex, address stakerAddress) public {
         Stake[] storage _stakesList = stakes[stakerAddress];
-        Stake storage _stake = _stakesList[stakeIdx];
+        Stake storage _stake = _stakesList[stakeIndex];
         require(_stake.stakeId >= 0, "stake not found");
+
+        if (_stake.deferralTs >= block.timestamp) {
+            return;
+        }
 
         uint256 stakeShares = _stake.shares;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
@@ -123,13 +121,16 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             payout = (equitySupply - (equitySupply * calculateEarlyPenalty(_stake)));
         }
 
-        Deferral memory deferral = Deferral(uint40(block.timestamp), _stake.stakeId, _stake.base, payout);
-
-        _stakesList[stakeIdx] = _stakesList[_stakesList.length - 1];
-        _stakesList.pop();
-
-        stakes[stakerAddress] = _stakesList;
-        deferrals[stakerAddress].push(deferral);
+        stakes[stakerAddress][stakeIndex] = Stake(
+            _stake.startTs,
+            block.timestamp,
+            _stake.stakeId,
+            _stake.term,
+            _stake.base,
+            _stake.bonus,
+            _stake.shares,
+            payout
+        );
 
         poolTotalShares -= stakeShares;
         poolSupply -= payout;
@@ -137,14 +138,22 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         --poolTotalStakes;
     }
 
-    function endStake(uint256 stakeIdx) public {
-        deferStake(stakeIdx, msg.sender);
-        Deferral memory _deferral = deferrals[msg.sender][stakeIdx];
-        _mint(msg.sender, _deferral.payout);
-        uint256 returnOnStake = _deferral.payout.div(_deferral.base);
+    function endStake(uint256 stakeIndex) public {
+        deferStake(stakeIndex, msg.sender);
+
+        uint256 lastIndex = stakes[msg.sender].length - 1;
+        Stake memory _stake = stakes[msg.sender][stakeIndex];
+        _mint(msg.sender, _stake.payout);
+        uint256 returnOnStake = _stake.payout.div(_stake.base);
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
+
+        if (stakeIndex != lastIndex) {
+            stakes[msg.sender][stakeIndex] = stakes[msg.sender][lastIndex];
+        }
+
+        stakes[msg.sender].pop();
     }
 
     function calculateBase(uint256 fenix) public pure returns (uint256) {
@@ -182,13 +191,5 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     function stakeCount(address stakerAddress) public view returns (uint256) {
         return stakes[stakerAddress].length;
-    }
-
-    function deferralFor(address stakerAddress, uint256 stakeIndex) public view returns (Deferral memory) {
-        return deferrals[stakerAddress][stakeIndex];
-    }
-
-    function deferralCount(address stakerAddress) public view returns (uint256) {
-        return deferrals[stakerAddress].length;
     }
 }

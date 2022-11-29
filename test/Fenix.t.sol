@@ -85,7 +85,7 @@ contract FenixTest is Test {
         uint256 bonus = 2.77069 * 1e18;
 
         uint256 timestamp = block.timestamp;
-        Stake memory stake1 = Stake(timestamp, 1, 100, base, bonus, base + bonus);
+        Stake memory stake1 = Stake(timestamp, 0, 1, 100, base, bonus, base + bonus, 0);
 
         vm.warp(timestamp + (86400 * 0));
         uint256 penalty0 = fenix.calculateEarlyPenalty(stake1);
@@ -114,7 +114,7 @@ contract FenixTest is Test {
         uint256 baseTerm = 100;
 
         uint256 timestamp = block.timestamp;
-        Stake memory stake1 = Stake(timestamp, 1, baseTerm, base, bonus, base + bonus);
+        Stake memory stake1 = Stake(timestamp, 0, 1, baseTerm, base, bonus, base + bonus, 0);
 
         vm.warp(timestamp + (86400 * baseTerm));
         uint256 penalty0 = fenix.calculateLatePenalty(stake1);
