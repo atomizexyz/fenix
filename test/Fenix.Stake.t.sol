@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake } from "src/Fenix.sol";
+import { Fenix, Stake } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -183,7 +183,7 @@ contract FenixStakeTest is Test {
         uint256 alicePayout = fenix.balanceOf(alice);
 
         assertTrue(alicePayout > bobPayout);
-        assertEq(bobPayout, 39816178867677923588196);
+        assertEq(bobPayout, 39816178867677923588195);
         assertEq(fenix.stakeCount(bob), 0);
 
         assertEq(alicePayout, 71514027382583756209589);

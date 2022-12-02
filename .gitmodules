@@ -21,3 +21,5 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "/Users/joeblau/Developer/atomize/src/fenix/lib/prb-math"]
+	branch = v3

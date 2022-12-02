@@ -1,6 +1,7 @@
+@atomize/=src/
 forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/src/
-prb-math/=lib/prb-math/contracts/
+@prb/math/=lib/prb-math/src/
 @prb/test/=lib/prb-test/src/
 xen-crypto/=lib/XEN-crypto/contracts/
 @openzeppelin/=lib/openzeppelin-contracts/
