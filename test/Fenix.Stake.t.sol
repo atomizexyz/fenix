@@ -189,4 +189,26 @@ contract FenixStakeTest is Test {
         assertEq(alicePayout, 71514027382583756209589);
         assertEq(fenix.stakeCount(alice), 0);
     }
+
+    function testMultipleStakesWealthRedistribution() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 10;
+        uint256 blockTs = block.timestamp;
+
+        for (uint256 i = 0; i < stakers.length; i++) {
+            uint256 fenixBalance = fenix.balanceOf(stakers[i]);
+            vm.prank(stakers[i]);
+            fenix.startStake(fenixBalance, term);
+        }
+
+        vm.warp(blockTs + 1);
+
+        // emergency end stake and redistribute wealth
+        vm.prank(oscar);
+        // fenix.endStake(0);
+
+        // uint256 oscarPayout = fenix.balanceOf(oscar);
+        // assertEq(oscarPayout, 0);
+        // assertEq(fenix.stakeCount(oscar), 0);
+    }
 }
