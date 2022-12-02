@@ -205,10 +205,10 @@ contract FenixStakeTest is Test {
 
         // emergency end stake and redistribute wealth
         vm.prank(oscar);
-        // fenix.endStake(0);
+        fenix.endStake(0);
 
-        // uint256 oscarPayout = fenix.balanceOf(oscar);
-        // assertEq(oscarPayout, 0);
-        // assertEq(fenix.stakeCount(oscar), 0);
+        uint256 oscarPayout = fenix.balanceOf(oscar);
+        assertEq(oscarPayout, 4596157010);
+        assertEq(fenix.stakeCount(oscar), 0);
     }
 }

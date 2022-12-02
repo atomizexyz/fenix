@@ -111,13 +111,16 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
         uint256 payout = 0;
         UD60x18 poolEquity = stakeShares.div(toUD60x18(poolTotalShares));
-        uint256 equitySupply = fromUD60x18(toUD60x18(poolSupply).mul(poolEquity));
+        UD60x18 equitySupply = toUD60x18(poolSupply).mul(poolEquity);
 
+        UD60x18 penalty = toUD60x18(1);
         if (block.timestamp > endTs) {
-            payout = (equitySupply - (equitySupply * calculateLatePenalty(_stake)));
+            penalty = wrap(calculateLatePenalty(_stake));
         } else {
-            payout = (equitySupply - (equitySupply * calculateEarlyPenalty(_stake)));
+            penalty = wrap(calculateEarlyPenalty(_stake));
         }
+
+        payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
 
         stakes[stakerAddress][stakeIndex] = Stake(
             _stake.startTs,
@@ -169,7 +172,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_SECONDS;
         UD60x18 base = toUD60x18(termDelta).div(toUD60x18(scaleTerm));
-        UD60x18 penalty = toUD60x18(1).sub(base.powu(2));
+        UD60x18 penalty = toUD60x18(1).sub(base.mul(base));
         return unwrap(penalty);
     }
 
