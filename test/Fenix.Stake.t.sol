@@ -192,7 +192,7 @@ contract FenixStakeTest is Test {
 
     function testMultipleStakesWealthRedistribution() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
-        uint256 term = 10;
+        uint256 term = 3560;
         uint256 blockTs = block.timestamp;
 
         for (uint256 i = 0; i < stakers.length; i++) {
@@ -208,7 +208,27 @@ contract FenixStakeTest is Test {
         fenix.endStake(0);
 
         uint256 oscarPayout = fenix.balanceOf(oscar);
-        assertEq(oscarPayout, 4596157010);
+        assertEq(oscarPayout, 34515128735);
         assertEq(fenix.stakeCount(oscar), 0);
+
+        vm.warp(blockTs + (86400 * term));
+
+        for (uint256 i = 0; i < stakers.length - 1; i++) {
+            vm.prank(stakers[i]);
+            fenix.endStake(0);
+        }
+
+        uint256 bobPayout = fenix.balanceOf(bob);
+        assertEq(bobPayout, 9861597109380419863998960459);
+        uint256 alicePayout = fenix.balanceOf(alice);
+        assertEq(alicePayout, 8858095785706069978180497216);
+        uint256 carolPayout = fenix.balanceOf(carol);
+        assertEq(carolPayout, 7630309603975471403821982902);
+        uint256 danPayout = fenix.balanceOf(dan);
+        assertEq(danPayout, 6046442307392684177455972681);
+        uint256 frankPayout = fenix.balanceOf(frank);
+        assertEq(frankPayout, 3815154801987735716282336283);
+
+        assertEq(fenix.poolSupply(), 0);
     }
 }
