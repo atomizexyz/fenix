@@ -120,8 +120,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         require(_stake.stakeId >= 0, "stake not found");
         require(_stake.deferralTs == 0, "stake already deferred");
-        if (msg.sender != stakerAddress) {
-            require(endTs > block.timestamp, "only owner can premturely defer stake");
+        if (block.timestamp < endTs) {
+            require(msg.sender == stakerAddress, "only owner can premturely defer stake");
         }
 
         UD60x18 stakeShares = toUD60x18(_stake.shares);

@@ -18,6 +18,7 @@ contract FenixStakeTest is Test {
     address internal dan = vm.addr(3);
     address internal frank = vm.addr(4);
     address internal oscar = vm.addr(5);
+    address internal chad = vm.addr(5);
 
     address[] internal stakers;
 
@@ -89,6 +90,39 @@ contract FenixStakeTest is Test {
         fenix.deferStake(0, bob);
 
         assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).payout, 51102142174303438937096);
+        assertEq(fenix.stakeCount(bob), 1);
+    }
+
+    /// @notice Test prevent other non owner from early defer
+    function testNonOwnerDeferEarlyStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 100;
+
+        uint256 fenixBalance = fenix.balanceOf(bob);
+        fenix.startStake(fenixBalance, term);
+
+        vm.warp(block.timestamp + 86400);
+
+        vm.expectRevert(bytes("only owner can premturely defer stake"));
+        vm.prank(chad);
+        fenix.deferStake(0, bob);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, 0);
+    }
+
+    /// @notice Test prevent other non owner from late defer
+    function testNonOwnerDeferLateStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 100;
+
+        uint256 fenixBalance = fenix.balanceOf(bob);
+        fenix.startStake(fenixBalance, term);
+
+        vm.warp(block.timestamp + (86400 * term) + 1);
+
+        vm.prank(chad);
+        fenix.deferStake(0, bob);
         assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
         assertEq(fenix.stakeFor(bob, 0).payout, 51102142174303438937096);
         assertEq(fenix.stakeCount(bob), 1);
