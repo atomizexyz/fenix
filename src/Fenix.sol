@@ -20,13 +20,12 @@ struct Stake {
     uint256 payout;
 }
 
+/// @title FENIX pays you to hold your own crypto
+/// @author Joe Blau <joe@atomize.xyz>
+/// @notice FENIX pays you to hold your own crypto
+/// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
 contract Fenix is ERC20, IBurnRedeemable, IERC165 {
-    // using PRBMathUD60x18 for uint256;
-
     address internal constant XEN_ADDRESS = 0x0C7BBB021d72dB4FfBa37bDF4ef055eECdbc0a29;
-
-    uint256 internal constant SCALE_NUMBER = 1e18;
-    uint256 internal constant SCALE_FRACTION = 1e6;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
 
@@ -36,7 +35,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant TIME_BONUS = 1_820;
 
     uint256 public startTs = 0;
-    uint256 public shareRate = 1 * SCALE_NUMBER;
+    uint256 public shareRate = 1e18;
 
     uint256 public maxInflationEndTs = 0;
 
@@ -55,12 +54,17 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         poolSupply = IERC20(XEN_ADDRESS).totalSupply();
     }
 
-    // IBurnRedeemable
-
+    /// @notice Evaluate if the contract supports the interface
+    /// @dev Evaluate if the contract supports burning tokens
+    /// @param interfaceId the interface to evaluate
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IBurnRedeemable).interfaceId;
     }
 
+    /// @notice Mint FENIX tokens
+    /// @dev Mint FENIX tokens to the user address
+    /// @param user the address of the user to mint FENIX tokens for
+    /// @param amount the amount of FENIX tokens to mint
     function onTokenBurned(address user, uint256 amount) external {
         require(msg.sender == XEN_ADDRESS, "Burner: wrong caller");
         require(user != address(0), "Burner: zero user address");
@@ -68,12 +72,17 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         _mint(user, amount);
     }
 
+    /// @notice Burn XEN tokens
+    /// @dev Execute proof of burn on remote contract to burn XEN tokens
+    /// @param xen the amount of XEN to burn from the current wallet address
     function burnXEN(uint256 xen) public {
         IBurnableToken(XEN_ADDRESS).burn(msg.sender, xen);
     }
 
-    // Init
-
+    /// @notice Starts a stake
+    /// @dev Initialize a stake for the current wallet address
+    /// @param fenix the amount of fenix to stake
+    /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
         uint256 base = calculateBase(fenix);
         uint256 bonus = calculateBonus(fenix, term);
@@ -98,18 +107,24 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         _burn(msg.sender, fenix);
     }
 
+    /// @notice Defer stake until future date
+    /// @dev Defer a stake by removing the supply allocated to the stake from the pool
+    /// @param stakeIndex the index of the stake to defer
+    /// @param stakerAddress the address of the stake owner that will be deferred
     function deferStake(uint256 stakeIndex, address stakerAddress) public {
         Stake[] storage _stakesList = stakes[stakerAddress];
         Stake storage _stake = _stakesList[stakeIndex];
-        require(_stake.stakeId >= 0, "stake not found");
 
-        if (_stake.deferralTs >= block.timestamp) {
-            return;
+        uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
+        uint256 payout = 0;
+
+        require(_stake.stakeId >= 0, "stake not found");
+        require(_stake.deferralTs == 0, "stake already deferred");
+        if (msg.sender != stakerAddress) {
+            require(endTs > block.timestamp, "only owner can premturely defer stake");
         }
 
         UD60x18 stakeShares = toUD60x18(_stake.shares);
-        uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
-        uint256 payout = 0;
         UD60x18 poolEquity = stakeShares.div(toUD60x18(poolTotalShares));
         UD60x18 equitySupply = toUD60x18(poolSupply).mul(poolEquity);
 
@@ -139,6 +154,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         --poolTotalStakes;
     }
 
+    /// @notice End a stake
+    /// @dev End a stake by allocating the stake supply to the stakers wallet
+    /// @param stakeIndex the index of the stake to end
     function endStake(uint256 stakeIndex) public {
         deferStake(stakeIndex, msg.sender);
 
@@ -157,16 +175,30 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         stakes[msg.sender].pop();
     }
 
+    /// @notice Calculates the base share rate
+    /// @dev Calculates the base share rate based on the fenix amount
+    /// @param fenix the amount of fenix used to calculate the base share
+    /// @return share base shares
     function calculateBase(uint256 fenix) public pure returns (uint256) {
         return fenix;
     }
 
+    /// @notice Calculate share bonus
+    /// @dev Use fenix amount and term to calcualte size and time bonus used for pool equity stake
+    /// @param fenix the amount of fenix used to calculate the equity stake
+    /// @param term the term of the stake in days used to calculate the pool equity stake
+    /// @return bonus the bonus for pool equity stake
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        uint256 sizeBonus = calculateBase(fenix);
-        uint256 timeBonus = (sizeBonus * (term * ONE_DAY_SECONDS)) / TIME_BONUS;
+        uint256 base = calculateBase(fenix);
+        uint256 sizeBonus = base;
+        uint256 timeBonus = (base * (term * ONE_DAY_SECONDS)) / TIME_BONUS;
         return timeBonus + sizeBonus;
     }
 
+    /// @notice Calcualte the early end stake penalty
+    /// @dev Calculates the early end stake penality to be split between the pool and the staker
+    /// @param stake the stake to calculate the penalty for
+    /// @return penalty the penalty percentage for the stake
     function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {
         require(block.timestamp >= stake.startTs, "Stake not started");
         uint256 termDelta = block.timestamp - stake.startTs;
@@ -176,6 +208,10 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return unwrap(penalty);
     }
 
+    /// @notice Calculate the late end stake penalty
+    /// @dev Calculates the late end stake penality to be split between the pool and the staker
+    /// @param stake a parameter just like in doxygen (must be followed by parameter name)
+    /// @return penalty the penalty percentage for the stake
     function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
         require(block.timestamp >= stake.startTs, "Stake not started");
@@ -184,15 +220,23 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (lateDay > ONE_EIGHTY_DAYS) return unwrap(toUD60x18(1));
         uint256 rootNumerator = lateDay;
         uint256 rootDenominator = ONE_EIGHTY_DAYS;
-        UD60x18 penalty = toUD60x18(rootNumerator).powu(3).div(toUD60x18(rootDenominator).powu(3));
+        UD60x18 penalty = (toUD60x18(rootNumerator).div(toUD60x18(rootDenominator))).powu(3);
         return unwrap(penalty);
     }
 
-    // Helper Functions
+    /// @notice Get stake for address at index
+    /// @dev Read stake from stakes mapping stake array
+    /// @param stakerAddress address of stake owner
+    /// @param stakeIndex index of stake to read
+    /// @return stake
     function stakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
         return stakes[stakerAddress][stakeIndex];
     }
 
+    /// @notice Get stake count for address
+    /// @dev Read stake count from stakes mapping
+    /// @param stakerAddress address of stake owner
+    /// @return stake count
     function stakeCount(address stakerAddress) public view returns (uint256) {
         return stakes[stakerAddress].length;
     }
