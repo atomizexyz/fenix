@@ -128,11 +128,6 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeCount(bob), 1);
     }
 
-    /// @notice Test deferring multiple stakes
-    function testDeferMultipleStakes() public {}
-
-    function testEndingDeferredStake() public {}
-
     /// @notice Test ending early stake
     function testEndingEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
