@@ -8,8 +8,6 @@ FENIX pays you to hold your own crypto
 
 </p>
 
-
-
 <p align="center">
   <a href="https://github.com/atomizexyz/fenix/actions"><img src="https://img.shields.io/github/workflow/status/atomizexyz/fenix/ci.yml?style=flat-square"/></a>
   <a href="https://getfoundry.sh/"><img src="https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg?style=flat-square"/></a>
