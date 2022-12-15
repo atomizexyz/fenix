@@ -1,15 +1,20 @@
 <p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./img/fenix-dark.svg">
-  <img alt="fenix" src="./img/fenix-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./.github/img/fenix-dark.svg">
+  <img alt="fenix" src="./.github/img/fenix-light.svg">
 </picture>
+<br>
+FENIX pays you to hold your own crypto
+
 </p>
+
+
 
 <p align="center">
-FENIX pays you to hold your own crypto
-[![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+  <a href="https://github.com/atomizexyz/fenix/actions"><img src="https://img.shields.io/github/workflow/status/atomizexyz/fenix/ci.yml?style=flat-square"/></a>
+  <a href="https://getfoundry.sh/"><img src="https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg?style=flat-square"/></a>
+  <a href="https://opensource.org/licenses/MIT"><img src=" https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square"/></a>
 </p>
-
 
 ## Build
 
@@ -37,7 +42,7 @@ forge build
 forge test
 ```
 
-**Lint** — 
+**Lint** — Lint code
 
 ```sh
 yarn lint
