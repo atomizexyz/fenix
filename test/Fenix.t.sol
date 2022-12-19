@@ -20,7 +20,10 @@ contract FenixTest is Test {
 
     function setUp() public {
         helper = new HelpersTest();
+        vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
+
+        console.log(address(xenCrypto));
 
         stakers.push(bob);
 

@@ -20,6 +20,7 @@ contract FenixBurnTest is Test {
 
     function setUp() public {
         helper = new HelpersTest();
+        vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
         stakers.push(bob);

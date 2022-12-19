@@ -26,6 +26,7 @@ contract FenixStakeTest is Test {
 
     function setUp() public {
         helper = new HelpersTest();
+        vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
         stakers.push(bob);
@@ -127,11 +128,6 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(bob, 0).payout, 51102142174303438937096);
         assertEq(fenix.stakeCount(bob), 1);
     }
-
-    /// @notice Test deferring multiple stakes
-    function testDeferMultipleStakes() public {}
-
-    function testEndingDeferredStake() public {}
 
     /// @notice Test ending early stake
     function testEndingEarlyStake() public {

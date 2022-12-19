@@ -7,6 +7,8 @@ import { Fenix, Stake } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 
 contract HelpersTest is Test {
+    uint256 public xenDeployerPrivateKey = 0x31c354f57fc542eba2c56699286723e94f7bd02a4891a0a7f68566c2a2df6795;
+
     function getFenixFor(
         address[] memory users,
         Fenix fenix,

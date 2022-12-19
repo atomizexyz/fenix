@@ -25,7 +25,7 @@ struct Stake {
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
 contract Fenix is ERC20, IBurnRedeemable, IERC165 {
-    address internal constant XEN_ADDRESS = 0x0C7BBB021d72dB4FfBa37bDF4ef055eECdbc0a29;
+    address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
 
