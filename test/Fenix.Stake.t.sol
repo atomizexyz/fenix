@@ -62,6 +62,21 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(bob, 1).stakeId, 1);
     }
 
+    /// @notice Test starting stake below max length
+    function testStartMaxStake() public {
+        uint256 maxStakeDays = 18250;
+        uint256 maxStakeDaysPlusOne = maxStakeDays + 1;
+
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 fenixBalance = fenix.balanceOf(bob);
+
+        vm.expectRevert(bytes("term too long"));
+        fenix.startStake(fenixBalance, maxStakeDaysPlusOne);
+
+        fenix.startStake(fenixBalance, maxStakeDays);
+        assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
+    }
+
     /// @notice Test deferring early stake
     function testDeferEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);

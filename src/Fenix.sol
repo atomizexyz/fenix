@@ -33,6 +33,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant ONE_EIGHTY_DAYS = 180;
     uint256 internal constant ONE_YEAR_DAYS = 365;
     uint256 internal constant TIME_BONUS = 1_820;
+    uint256 internal constant MAX_STAKE_LENGTH_DAYS = 365 * 50;
 
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
@@ -84,6 +85,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param fenix the amount of fenix to stake
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
+        require(term <= MAX_STAKE_LENGTH_DAYS, "term too long");
         uint256 base = calculateBase(fenix);
         uint256 bonus = calculateBonus(fenix, term);
         uint256 shares = base + bonus;

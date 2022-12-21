@@ -23,8 +23,6 @@ contract FenixTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
-        console.log(address(xenCrypto));
-
         stakers.push(bob);
 
         helper.generateXENFor(stakers, xenCrypto);
