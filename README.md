@@ -7,12 +7,10 @@
 FENIX pays you to hold your own crypto
 
 </p>
-
 <p align="center">
-  <a href="https://github.com/atomizexyz/fenix/actions"><img src="https://img.shields.io/github/workflow/status/atomizexyz/fenix/CI?style=flat-square"/></a>
-<a href="https://getfoundry.sh/"><img src="https://img.shields.io/badge/built%20with-Foundry-FFDB1C.svg?style=flat-square"/></a>
-<a href="https://opensource.org/licenses/MIT"><img src=" https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square"/></a>
-
+  <a href="https://github.com/atomizexyz/fenix/actions"><img src="https://img.shields.io/github/actions/workflow/status/atomizexyz/fenix/ci.yml?branch=main&style=flat-square"/></a>
+  <a href="https://getfoundry.sh/"><img src="https://img.shields.io/badge/built%20with-Foundry-FFDB1C.svg?style=flat-square"/></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square"/></a>
 </p>
 
 ## Introduction
