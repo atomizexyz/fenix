@@ -41,6 +41,6 @@ contract FenixShareTest is Test {
         fenix.endStake(0);
 
         assertTrue(fenix.shareRate() > 1e18);
-        assertEq(fenix.shareRate(), 1476002026870297468);
+        assertEq(fenix.shareRate(), 1476002026870297466);
     }
 }

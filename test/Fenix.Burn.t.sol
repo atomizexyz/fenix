@@ -44,6 +44,6 @@ contract FenixBurnTest is Test {
         uint256 balancePostBurnFENIX = fenix.balanceOf(bob);
 
         assertEq(balancePostBurnXEN, 0);
-        assertEq(balancePostBurnFENIX, 3300 * 1e18);
+        assertEq(balancePostBurnFENIX, 3300 * 1e14);
     }
 }

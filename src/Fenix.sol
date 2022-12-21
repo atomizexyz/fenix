@@ -29,11 +29,12 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
 
-    uint256 internal constant ONE_DAY_SECONDS = 86400;
+    uint256 internal constant ONE_DAY_SECONDS = 86_400;
     uint256 internal constant ONE_EIGHTY_DAYS = 180;
     uint256 internal constant ONE_YEAR_DAYS = 365;
     uint256 internal constant TIME_BONUS = 1_820;
     uint256 internal constant MAX_STAKE_LENGTH_DAYS = 365 * 50;
+    uint256 internal constant XEN_RATIO = 10_000;
 
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
@@ -52,7 +53,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = block.timestamp;
-        poolSupply = IERC20(XEN_ADDRESS).totalSupply();
+        poolSupply = IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -70,7 +71,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(msg.sender == XEN_ADDRESS, "Burner: wrong caller");
         require(user != address(0), "Burner: zero user address");
         require(amount != 0, "Burner: zero amount");
-        _mint(user, amount);
+        _mint(user, amount / XEN_RATIO);
     }
 
     /// @notice Burn XEN tokens
