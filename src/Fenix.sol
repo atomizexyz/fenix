@@ -47,6 +47,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     uint256 public currentStakeId = 0;
 
+    bool public bigBonusUnclaimed = true;
+
     mapping(address => Stake[]) public stakes;
 
     // Construtor
@@ -225,6 +227,15 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 rootDenominator = ONE_EIGHTY_DAYS;
         UD60x18 penalty = (toUD60x18(rootNumerator).div(toUD60x18(rootDenominator))).powu(3);
         return unwrap(penalty);
+    }
+
+    function bigBonus() public {
+        uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
+        console.log(startTs, block.timestamp, endTs);
+        require(block.timestamp > endTs, "Big bonus not active");
+        require(bigBonusUnclaimed, "Big bonus already claimed");
+        poolSupply += IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
+        bigBonusUnclaimed = false;
     }
 
     /// @notice Get stake for address at index
