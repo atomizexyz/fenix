@@ -28,6 +28,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
+    uint256 internal constant TEMPORAL_BONUS_RATE = 0.20e18;
 
     uint256 internal constant ONE_DAY_SECONDS = 86_400;
     uint256 internal constant ONE_EIGHTY_DAYS = 180;
@@ -200,6 +201,17 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return timeBonus + sizeBonus;
     }
 
+    /// @notice Calculate time bonus
+    /// @dev Use 20% annual compound interest rate formula to calculate the time bonus
+    /// @param base the base fenix
+    /// @param term the term of the stake in days used to calculate the pool equity stake
+    /// @return bonus rate for longer stake duration
+    function calculateTimeBonus(uint256 base, uint256 term) public pure returns (uint256) {
+        UD60x18 annualCompletionPercent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
+        UD60x18 bonus = toUD60x18(base).mul(toUD60x18(1).add(ud(TEMPORAL_BONUS_RATE)).pow(annualCompletionPercent));
+        return unwrap(bonus);
+    }
+
     /// @notice Calcualte the early end stake penalty
     /// @dev Calculates the early end stake penality to be split between the pool and the staker
     /// @param stake the stake to calculate the penalty for
@@ -231,7 +243,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     function bigBonus() public {
         uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
-        console.log(startTs, block.timestamp, endTs);
         require(block.timestamp > endTs, "Big bonus not active");
         require(bigBonusUnclaimed, "Big bonus already claimed");
         poolSupply += IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
