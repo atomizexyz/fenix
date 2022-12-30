@@ -28,7 +28,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
-    uint256 internal constant TEMPORAL_BONUS_RATE = 0.20e18;
+    uint256 internal constant SIZE_BONUS_RATE = 0.10e18;
+    uint256 internal constant TIME_BONUS_RATE = 0.20e18;
 
     uint256 internal constant ONE_DAY_SECONDS = 86_400;
     uint256 internal constant ONE_EIGHTY_DAYS = 180;
@@ -90,11 +91,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
         require(term <= MAX_STAKE_LENGTH_DAYS, "term too long");
-        uint256 base = calculateBase(fenix);
-        uint256 bonus = calculateBonus(fenix, term);
-        uint256 shares = base + bonus;
+        uint256 base = calculateBaseBonus(fenix);
+        uint256 bonus = calculateBonus(base, term);
+        uint256 totalBonus = base + bonus;
 
-        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, base, bonus, shares, 0);
+        // Convert effective FENIX to sahres
+        uint256 shares = unwrap(wrap(totalBonus).div(wrap(shareRate)));
+
+        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, fenix, totalBonus, shares, 0);
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
@@ -102,7 +106,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             UD60x18 root = toUD60x18(1).add(wrap(ANNUAL_INFLATION_RATE));
             UD60x18 exponent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
             UD60x18 newPoolSupply = toUD60x18(poolSupply).mul(root.pow(exponent));
-            poolSupply = fromUD60x18(newPoolSupply);
+            poolSupply = fromUD60x18(newPoolSupply) + fenix;
+
             maxInflationEndTs = endTs;
         }
 
@@ -181,35 +186,43 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         stakes[msg.sender].pop();
     }
 
-    /// @notice Calculates the base share rate
-    /// @dev Calculates the base share rate based on the fenix amount
-    /// @param fenix the amount of fenix used to calculate the base share
-    /// @return share base shares
-    function calculateBase(uint256 fenix) public pure returns (uint256) {
-        return fenix;
-    }
-
     /// @notice Calculate share bonus
     /// @dev Use fenix amount and term to calcualte size and time bonus used for pool equity stake
-    /// @param fenix the amount of fenix used to calculate the equity stake
+    /// @param base the amount of fenix used to calculate the equity stake
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the bonus for pool equity stake
-    function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        uint256 base = calculateBase(fenix);
-        uint256 sizeBonus = base;
-        uint256 timeBonus = (base * (term * ONE_DAY_SECONDS)) / TIME_BONUS;
-        return timeBonus + sizeBonus;
+    function calculateBonus(uint256 base, uint256 term) public pure returns (uint256) {
+        uint256 sizeBonus = calculateSizeBonus(base);
+        uint256 timeBonus = calculateTimeBonus(base, term);
+        return sizeBonus + timeBonus;
+    }
+
+    /// @notice Calculate base bonus
+    /// @dev Use fenix amount to calcualte base bonus used for pool equity stake
+    /// @param fenix the amount of fenix used to calculate the equity stake
+    /// @return bonus the base bonus for pool equity stake
+    function calculateBaseBonus(uint256 fenix) public pure returns (uint256) {
+        return unwrap(toUD60x18(fenix).ln());
+    }
+
+    /// @notice Calculate size bonus
+    /// @dev Use fenix amount to calcualte size bonus used for pool equity stake
+    /// @param base the base bonus
+    /// @return bonus rate for larger stake size
+    function calculateSizeBonus(uint256 base) public pure returns (uint256) {
+        UD60x18 bonus = wrap(base).mul(ud(SIZE_BONUS_RATE));
+        return unwrap(bonus);
     }
 
     /// @notice Calculate time bonus
     /// @dev Use 20% annual compound interest rate formula to calculate the time bonus
-    /// @param base the base fenix
+    /// @param base the base bonus
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus rate for longer stake duration
     function calculateTimeBonus(uint256 base, uint256 term) public pure returns (uint256) {
         UD60x18 annualCompletionPercent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
-        UD60x18 bonus = toUD60x18(base).mul(toUD60x18(1).add(ud(TEMPORAL_BONUS_RATE)).pow(annualCompletionPercent));
-        return unwrap(bonus);
+        UD60x18 bonus = toUD60x18(base).mul(toUD60x18(1).add(ud(TIME_BONUS_RATE)).pow(annualCompletionPercent));
+        return fromUD60x18(bonus);
     }
 
     /// @notice Calcualte the early end stake penalty

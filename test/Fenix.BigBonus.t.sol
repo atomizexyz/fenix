@@ -47,12 +47,12 @@ contract FenixBigBonusTest is Test {
 
         uint256 currentSupply = fenix.poolSupply();
 
-        vm.warp(block.timestamp + (86400 * 180) + 1);
+        vm.warp(block.timestamp + (8_6400 * 180) + 1);
         fenix.bigBonus();
 
         uint256 newSupply = fenix.poolSupply();
-        assertEq(currentSupply, 3462200000000000000);
-        assertEq(newSupply, 3462200000000000000);
+        assertEq(currentSupply, 3_462200000000000000);
+        assertEq(newSupply, 3_462200000000000000);
     }
 
     function testBigBonusMoreStakes() public {
@@ -61,12 +61,12 @@ contract FenixBigBonusTest is Test {
 
         helper.generateXENFor(stakers, xenCrypto);
 
-        vm.warp(block.timestamp + (86400 * 180) + 1);
+        vm.warp(block.timestamp + (86_400 * 180) + 1);
         fenix.bigBonus();
 
         uint256 newSupply = fenix.poolSupply();
-        assertEq(currentSupply, 3462200000000000000);
-        assertEq(newSupply, 6922900000000000000);
+        assertEq(currentSupply, 3_462200000000000000);
+        assertEq(newSupply, 6_922900000000000000);
     }
 
     function testBigBonusTooEarly() public {
