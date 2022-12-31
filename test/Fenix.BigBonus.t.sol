@@ -75,7 +75,7 @@ contract FenixBigBonusTest is Test {
         helper.generateXENFor(stakers, xenCrypto);
 
         vm.warp(block.timestamp + (86_400 * 179) - fenix.startTs());
-        vm.expectRevert(bytes("Big bonus not active"));
+        vm.expectRevert(bytes("big bonus: not active"));
         fenix.bigBonus();
     }
 
@@ -86,7 +86,7 @@ contract FenixBigBonusTest is Test {
 
         vm.warp(block.timestamp + (86_400 * 180));
         fenix.bigBonus();
-        vm.expectRevert(bytes("Big bonus already claimed"));
+        vm.expectRevert(bytes("big bonus: already claimed"));
         fenix.bigBonus();
     }
 }

@@ -73,9 +73,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param user the address of the user to mint FENIX tokens for
     /// @param amount the amount of FENIX tokens to mint
     function onTokenBurned(address user, uint256 amount) external {
-        require(msg.sender == XEN_ADDRESS, "Burner: wrong caller");
-        require(user != address(0), "Burner: zero user address");
-        require(amount != 0, "Burner: zero amount");
+        require(msg.sender == XEN_ADDRESS, "burner: wrong caller");
+        require(user != address(0), "burner: zero user address");
+        require(amount != 0, "burner: zero amount");
         _mint(user, amount / XEN_RATIO);
     }
 
@@ -91,7 +91,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param fenix the amount of fenix to stake
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
-        require(term <= MAX_STAKE_LENGTH_DAYS, "term too long");
+        require(term <= MAX_STAKE_LENGTH_DAYS, "staker: term too long");
         uint256 bonus = calculateBonus(fenix, term);
 
         // Convert effective FENIX bonus to shares
@@ -127,10 +127,10 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
         uint256 payout = 0;
 
-        require(_stake.stakeId >= 0, "stake not found");
-        require(_stake.deferralTs == 0, "stake already deferred");
+        require(_stake.stakeId >= 0, "staer: stake not found");
+        require(_stake.deferralTs == 0, "staker: stake already deferred");
         if (block.timestamp < endTs) {
-            require(msg.sender == stakerAddress, "only owner can premturely defer stake");
+            require(msg.sender == stakerAddress, "staker: only owner can premturely defer stake");
         }
 
         UD60x18 stakeShares = toUD60x18(_stake.shares);
@@ -221,7 +221,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param stake the stake to calculate the penalty for
     /// @return penalty the penalty percentage for the stake
     function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {
-        require(block.timestamp >= stake.startTs, "Stake not started");
+        require(block.timestamp >= stake.startTs, "early calc: stake not started");
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_SECONDS;
         UD60x18 base = toUD60x18(termDelta).div(toUD60x18(scaleTerm));
@@ -235,8 +235,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @return penalty the penalty percentage for the stake
     function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
-        require(block.timestamp >= stake.startTs, "Stake not started");
-        require(block.timestamp >= endTs, "Stake is active");
+        require(block.timestamp >= stake.startTs, "late calc: stake not started");
+        require(block.timestamp >= endTs, "late calc: stake is active");
         uint256 lateDay = (block.timestamp - endTs) / ONE_DAY_SECONDS;
         if (lateDay > ONE_EIGHTY_DAYS) return unwrap(toUD60x18(1));
         uint256 rootNumerator = lateDay;
@@ -247,8 +247,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     function bigBonus() public {
         uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
-        require(block.timestamp > endTs, "Big bonus not active");
-        require(bigBonusUnclaimed, "Big bonus already claimed");
+        require(block.timestamp > endTs, "big bonus: not active");
+        require(bigBonusUnclaimed, "big bonus: already claimed");
         poolSupply += IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
         bigBonusUnclaimed = false;
     }

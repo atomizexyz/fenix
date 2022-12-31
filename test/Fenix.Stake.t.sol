@@ -107,7 +107,7 @@ contract FenixStakeTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 fenixBalance = fenix.balanceOf(bob);
 
-        vm.expectRevert(bytes("term too long"));
+        vm.expectRevert(bytes("staker: term too long"));
         fenix.startStake(fenixBalance, maxStakeDaysPlusOne);
 
         fenix.startStake(fenixBalance, maxStakeDays);
@@ -158,7 +158,7 @@ contract FenixStakeTest is Test {
 
         vm.warp(block.timestamp + 86400);
 
-        vm.expectRevert(bytes("only owner can premturely defer stake"));
+        vm.expectRevert(bytes("staker: only owner can premturely defer stake"));
         vm.prank(chad);
         fenix.deferStake(0, bob);
         assertEq(fenix.stakeFor(bob, 0).deferralTs, 0);
