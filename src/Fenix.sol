@@ -14,7 +14,7 @@ struct Stake {
     uint256 deferralTs;
     uint256 stakeId;
     uint256 term;
-    uint256 base;
+    uint256 fenix;
     uint256 bonus;
     uint256 shares;
     uint256 payout;
@@ -37,6 +37,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant TIME_BONUS = 1_820;
     uint256 internal constant MAX_STAKE_LENGTH_DAYS = 365 * 50;
     uint256 internal constant XEN_RATIO = 10_000;
+    uint256 internal constant MIN_SIZE_BONUS_ASH = 3;
 
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
@@ -91,19 +92,16 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
         require(term <= MAX_STAKE_LENGTH_DAYS, "term too long");
-        uint256 base = calculateBaseBonus(fenix);
-        uint256 bonus = calculateBonus(base, term);
-        uint256 totalBonus = base + bonus;
+        uint256 bonus = calculateBonus(fenix, term);
 
-        // Convert effective FENIX to sahres
-        uint256 shares = unwrap(wrap(totalBonus).div(wrap(shareRate)));
-
-        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, fenix, totalBonus, shares, 0);
+        // Convert effective FENIX bonus to shares
+        uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
+        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, fenix, bonus, shares, 0);
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
         if (endTs > maxInflationEndTs) {
-            UD60x18 root = toUD60x18(1).add(wrap(ANNUAL_INFLATION_RATE));
+            UD60x18 root = toUD60x18(1).add(ud(ANNUAL_INFLATION_RATE));
             UD60x18 exponent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
             UD60x18 newPoolSupply = toUD60x18(poolSupply).mul(root.pow(exponent));
             poolSupply = fromUD60x18(newPoolSupply) + fenix;
@@ -141,9 +139,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         UD60x18 penalty = toUD60x18(1);
         if (block.timestamp > endTs) {
-            penalty = wrap(calculateLatePenalty(_stake));
+            penalty = ud(calculateLatePenalty(_stake));
         } else {
-            penalty = wrap(calculateEarlyPenalty(_stake));
+            penalty = ud(calculateEarlyPenalty(_stake));
         }
 
         payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
@@ -153,7 +151,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             block.timestamp,
             _stake.stakeId,
             _stake.term,
-            _stake.base,
+            _stake.fenix,
             _stake.bonus,
             _stake.shares,
             payout
@@ -174,7 +172,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 lastIndex = stakes[msg.sender].length - 1;
         Stake memory _stake = stakes[msg.sender][stakeIndex];
         _mint(msg.sender, _stake.payout);
-        uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.base)));
+        uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
+        // console.log("ros:", returnOnStake);
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
@@ -188,40 +187,32 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     /// @notice Calculate share bonus
     /// @dev Use fenix amount and term to calcualte size and time bonus used for pool equity stake
-    /// @param base the amount of fenix used to calculate the equity stake
+    /// @param fenix the amount of fenix used to calculate the equity stake
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the bonus for pool equity stake
-    function calculateBonus(uint256 base, uint256 term) public pure returns (uint256) {
-        uint256 sizeBonus = calculateSizeBonus(base);
-        uint256 timeBonus = calculateTimeBonus(base, term);
+    function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
+        uint256 sizeBonus = calculateSizeBonus(fenix);
+        uint256 timeBonus = calculateTimeBonus(fenix, term);
         return sizeBonus + timeBonus;
-    }
-
-    /// @notice Calculate base bonus
-    /// @dev Use fenix amount to calcualte base bonus used for pool equity stake
-    /// @param fenix the amount of fenix used to calculate the equity stake
-    /// @return bonus the base bonus for pool equity stake
-    function calculateBaseBonus(uint256 fenix) public pure returns (uint256) {
-        return unwrap(toUD60x18(fenix).ln());
     }
 
     /// @notice Calculate size bonus
     /// @dev Use fenix amount to calcualte size bonus used for pool equity stake
-    /// @param base the base bonus
+    /// @param fenix the amount of fenix used to calculate the equity stake
     /// @return bonus rate for larger stake size
-    function calculateSizeBonus(uint256 base) public pure returns (uint256) {
-        UD60x18 bonus = wrap(base).mul(ud(SIZE_BONUS_RATE));
+    function calculateSizeBonus(uint256 fenix) public pure returns (uint256) {
+        UD60x18 bonus = ud(fenix).mul(ud(SIZE_BONUS_RATE));
         return unwrap(bonus);
     }
 
     /// @notice Calculate time bonus
     /// @dev Use 20% annual compound interest rate formula to calculate the time bonus
-    /// @param base the base bonus
+    /// @param fenix the fenix bonus
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus rate for longer stake duration
-    function calculateTimeBonus(uint256 base, uint256 term) public pure returns (uint256) {
+    function calculateTimeBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
         UD60x18 annualCompletionPercent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
-        UD60x18 bonus = toUD60x18(base).mul(toUD60x18(1).add(ud(TIME_BONUS_RATE)).pow(annualCompletionPercent));
+        UD60x18 bonus = toUD60x18(fenix).mul(toUD60x18(1).add(ud(TIME_BONUS_RATE)).pow(annualCompletionPercent));
         return fromUD60x18(bonus);
     }
 

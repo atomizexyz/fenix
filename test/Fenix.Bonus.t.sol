@@ -44,41 +44,23 @@ contract BonusTest is Test {
         assertEq(aliciaBonus, 923319165593745083);
     }
 
-    function testCalculateBaseBonus() public {
-        uint256 burn1ASH = 1;
-        uint256 baseBonus1ASH = fenix.calculateBaseBonus(burn1ASH);
-        assertEq(baseBonus1ASH, 0); // verify
-
-        uint256 burn1FENIX = 1 * 1e18;
-        uint256 baseBonus1FENIX = fenix.calculateBaseBonus(burn1FENIX);
-        assertEq(baseBonus1FENIX, 41_446531673892822311); // verify
-
-        uint256 burn2FENIX = 2 * 1e18;
-        uint256 baseBonus2FENIX = fenix.calculateBaseBonus(burn2FENIX);
-        assertEq(baseBonus2FENIX, 42_139678854452767620); // verify
-
-        uint256 burnTrillionFENIX = 1_000_000_000_000 * 1e18;
-        uint256 baseBonusTrillionFENIX = fenix.calculateBaseBonus(burnTrillionFENIX);
-        assertEq(baseBonusTrillionFENIX, 69_077552789821370529); // verify
-    }
-
     /// @notice Test calculating size bonus
     function testCalculateSizeBonus() public {
-        uint256 base1FENIX = 0;
-        uint256 sizeBonus1FENIX = fenix.calculateSizeBonus(base1FENIX);
+        uint256 burn1ASH = 1;
+        uint256 sizeBonus1FENIX = fenix.calculateSizeBonus(burn1ASH);
         assertEq(sizeBonus1FENIX, 0); // verify
 
-        uint256 base2FENIX = 42_139678854452767620;
-        uint256 sizeBonus2FENIX = fenix.calculateSizeBonus(base2FENIX);
-        assertEq(sizeBonus2FENIX, 4_213967885445276762); // verify
+        uint256 burn2FENIX = 2 * 1e18;
+        uint256 sizeBonus2FENIX = fenix.calculateSizeBonus(burn2FENIX);
+        assertEq(sizeBonus2FENIX, 200000000000000000); // verify
 
-        uint256 base3FENIX = 42_545143962560932004;
-        uint256 sizeBonus3FENIX = fenix.calculateSizeBonus(base3FENIX);
-        assertEq(sizeBonus3FENIX, 4_254514396256093200); // verify
+        uint256 burn3FENIX = 3 * 1e18;
+        uint256 sizeBonus3FENIX = fenix.calculateSizeBonus(burn3FENIX);
+        assertEq(sizeBonus3FENIX, 300000000000000000); // verify
 
-        uint256 base4FENIX = 69_077552789821370529;
-        uint256 sizeBonus4FENIX = fenix.calculateSizeBonus(base4FENIX);
-        assertEq(sizeBonus4FENIX, 6_907755278982137052); // verify
+        uint256 burnTrillionFENIX = 1_000_000_000_000 * 1e18;
+        uint256 sizeBonus4FENIX = fenix.calculateSizeBonus(burnTrillionFENIX);
+        assertEq(sizeBonus4FENIX, 100000000000_000000000000000000); // verify
     }
 
     /// @notice Test calculating time bonus

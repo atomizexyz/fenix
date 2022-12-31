@@ -63,6 +63,42 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(bob, 1).stakeId, 1);
     }
 
+    /// @notice Test split stake vs single stake
+    function testSplitStake() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 365;
+        uint256 blockTs = block.timestamp;
+
+        uint256 halfBalance = 1e15;
+
+        vm.prank(bob);
+        fenix.startStake(halfBalance, term);
+        vm.prank(bob);
+        fenix.startStake(halfBalance, term);
+
+        vm.prank(alice);
+        fenix.startStake(halfBalance * 2, term);
+
+        uint256 bobPostStakeBalance = fenix.balanceOf(bob);
+        uint256 alicePostStakeBalance = fenix.balanceOf(alice);
+
+        vm.warp(blockTs + (86400 * term));
+
+        // end stakes
+        vm.prank(bob);
+        fenix.endStake(0);
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        vm.prank(alice);
+        fenix.endStake(0);
+
+        uint256 bobPayout = fenix.balanceOf(bob) - bobPostStakeBalance;
+        uint256 alicePayout = fenix.balanceOf(alice) - alicePostStakeBalance;
+
+        assertGt(alicePayout, bobPayout); // verify
+    }
+
     /// @notice Test starting stake below max length
     function testStartMaxStake() public {
         uint256 maxStakeDays = 18250;
@@ -190,10 +226,10 @@ contract FenixStakeTest is Test {
         uint256 bobPayout = fenix.balanceOf(bob);
         uint256 alicePayout = fenix.balanceOf(alice);
 
-        assertEq(bobPayout, 2_985487111100909222);
+        assertEq(bobPayout, 3_141441284256474392);
         assertEq(fenix.stakeCount(bob), 0);
 
-        assertEq(alicePayout, 2_977727106329434671);
+        assertEq(alicePayout, 2_821772933173869501);
         assertEq(fenix.stakeCount(alice), 0);
     }
 
@@ -201,7 +237,7 @@ contract FenixStakeTest is Test {
     function testMultipleStakesAssymetricTerm() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 bobTerm = 100;
-        uint256 aliceTerm = 200;
+        uint256 aliceTerm = 365;
 
         uint256 blockTs = block.timestamp;
         // start stakes
@@ -228,11 +264,11 @@ contract FenixStakeTest is Test {
         uint256 bobPayout = fenix.balanceOf(bob);
         uint256 alicePayout = fenix.balanceOf(alice);
 
-        assertTrue(alicePayout > bobPayout);
-        assertEq(bobPayout, 6_802704852430190351);
+        assertGt(alicePayout, bobPayout);
+        assertEq(bobPayout, 12_641143294713773849);
         assertEq(fenix.stakeCount(bob), 0);
 
-        assertEq(alicePayout, 6_954846204372395686);
+        assertEq(alicePayout, 12_822260899977946379);
         assertEq(fenix.stakeCount(alice), 0);
     }
 
@@ -254,7 +290,7 @@ contract FenixStakeTest is Test {
         fenix.endStake(0);
 
         uint256 oscarPayout = fenix.balanceOf(oscar);
-        assertEq(oscarPayout, 5962697);
+        assertEq(oscarPayout, 3451513);
         assertEq(fenix.stakeCount(oscar), 0);
 
         vm.warp(blockTs + (86400 * term));
@@ -265,15 +301,15 @@ contract FenixStakeTest is Test {
         }
 
         uint256 bobPayout = fenix.balanceOf(bob);
-        assertEq(bobPayout, 730612_105450523498943563);
+        assertEq(bobPayout, 986159_943237703566120220);
         uint256 alicePayout = fenix.balanceOf(alice);
-        assertEq(alicePayout, 728713_067466634009810193);
+        assertEq(alicePayout, 885809_787231803600844675);
         uint256 carolPayout = fenix.balanceOf(carol);
-        assertEq(carolPayout, 726072_807986039186458015);
+        assertEq(carolPayout, 763031_140137027377914922);
         uint256 danPayout = fenix.balanceOf(dan);
-        assertEq(danPayout, 721955_753810375744587627);
+        assertEq(danPayout, 604644_373169189878699560);
         uint256 frankPayout = fenix.balanceOf(frank);
-        assertEq(frankPayout, 713807_079130665671663392);
+        assertEq(frankPayout, 381515_570068513690394597);
 
         assertEq(fenix.poolSupply(), 0);
     }
