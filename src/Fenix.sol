@@ -171,7 +171,11 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 payout = 0;
 
         require(_stake.stakeId >= 0, "staer: stake not found");
-        require(_stake.deferralTs == 0, "staker: stake already deferred");
+        if (_stake.deferralTs == 0) {
+            require(_stake.deferralTs == 0, "staker: stake already deferred");
+        } else {
+            return;
+        }
         if (block.timestamp < endTs) {
             require(msg.sender == stakerAddress, "staker: only owner can premturely defer stake");
         }
@@ -213,7 +217,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     function endStake(uint256 stakeIndex) public {
         deferStake(stakeIndex, msg.sender);
 
-        uint256 lastIndex = stakes[msg.sender].length - 1;
         Stake memory _stake = stakes[msg.sender][stakeIndex];
         _mint(msg.sender, _stake.payout);
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
@@ -221,6 +224,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             shareRate = returnOnStake;
         }
 
+        uint256 lastIndex = stakes[msg.sender].length - 1;
         if (stakeIndex != lastIndex) {
             stakes[msg.sender][stakeIndex] = stakes[msg.sender][lastIndex];
         }

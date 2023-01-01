@@ -131,6 +131,16 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeCount(bob), 1);
     }
 
+    /// @notice Test deferring early stake then ending
+    function testDeferEarlyStakeThenEnd() public {
+        testDeferEarlyStake();
+
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        assertEq(fenix.stakeCount(bob), 0);
+    }
+
     /// @notice Test deferring late stake
     function testDeferLateStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
@@ -146,6 +156,16 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
         assertEq(fenix.stakeFor(bob, 0).payout, 5_963214217430343893);
         assertEq(fenix.stakeCount(bob), 1);
+    }
+
+    /// @notice Test deferring late stake then ending
+    function testDeferLateStakeThenEnd() public {
+        testDeferLateStake();
+
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        assertEq(fenix.stakeCount(bob), 0);
     }
 
     /// @notice Test prevent other non owner from early defer
