@@ -20,11 +20,45 @@ struct Stake {
     uint256 payout;
 }
 
+///----------------------------------------------------------------------------------------------------------------
+/// Events
+///----------------------------------------------------------------------------------------------------------------
+library FenixEvent {
+    /// @notice New FENIX tokens have been minted
+    /// @dev XEN proof of burn smart contract burns XEN tokens and mints FENIX tokens
+    /// @param _userAddress the address of the staker to mint FENIX tokens for
+    /// @param _amount the amount of FENIX tokens to mint
+    event FenixMinted(address indexed _userAddress, uint256 indexed _amount);
+
+    /// @notice Stake has been started
+    /// @dev Size and Time bonus have been calculated to burn FENIX in exchnge for equity to start stake
+    /// @param _stake the stake object
+    event StartStake(Stake indexed _stake);
+
+    /// @notice Stake has been deferred
+    /// @dev Remove the stake and it's equity from the pool
+    /// @param _stake the stake object
+    event DeferStake(Stake indexed _stake);
+
+    /// @notice Stake has been ended
+    /// @dev Remove the stake from the users stakes and mint the payout into the stakers wallet
+    /// @param _stake the stake object
+    event EndStake(Stake indexed _stake);
+
+    /// @notice Big bonus has been claimed
+    /// @dev Emit hyperinflation event based on XEN suppply
+    event ClaimBigBonus();
+}
+
 /// @title FENIX pays you to hold your own crypto
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
 contract Fenix is ERC20, IBurnRedeemable, IERC165 {
+    ///----------------------------------------------------------------------------------------------------------------
+    /// Constants
+    ///----------------------------------------------------------------------------------------------------------------
+
     address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
@@ -38,6 +72,10 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant MAX_STAKE_LENGTH_DAYS = 365 * 50;
     uint256 internal constant XEN_RATIO = 10_000;
     uint256 internal constant MIN_SIZE_BONUS_ASH = 3;
+
+    ///----------------------------------------------------------------------------------------------------------------
+    /// Variables
+    ///----------------------------------------------------------------------------------------------------------------
 
     uint256 public startTs = 0;
     uint256 public shareRate = 1e18;
@@ -54,7 +92,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     mapping(address => Stake[]) public stakes;
 
-    // Construtor
+    ///----------------------------------------------------------------------------------------------------------------
+    /// Contract
+    ///----------------------------------------------------------------------------------------------------------------
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = block.timestamp;
@@ -76,7 +116,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(msg.sender == XEN_ADDRESS, "burner: wrong caller");
         require(user != address(0), "burner: zero user address");
         require(amount != 0, "burner: zero amount");
-        _mint(user, amount / XEN_RATIO);
+        uint256 fenix = amount / XEN_RATIO;
+        _mint(user, fenix);
+        emit FenixEvent.FenixMinted(user, fenix);
     }
 
     /// @notice Burn XEN tokens
@@ -114,6 +156,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         ++poolTotalStakes;
         ++currentStakeId;
         _burn(msg.sender, fenix);
+        emit FenixEvent.StartStake(_stake);
     }
 
     /// @notice Defer stake until future date
@@ -161,6 +204,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         poolSupply -= payout;
 
         --poolTotalStakes;
+        emit FenixEvent.DeferStake(_stake);
     }
 
     /// @notice End a stake
@@ -173,7 +217,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         Stake memory _stake = stakes[msg.sender][stakeIndex];
         _mint(msg.sender, _stake.payout);
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
-        // console.log("ros:", returnOnStake);
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
@@ -183,6 +226,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         }
 
         stakes[msg.sender].pop();
+        emit FenixEvent.EndStake(_stake);
     }
 
     /// @notice Calculate share bonus
@@ -245,12 +289,13 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return unwrap(penalty);
     }
 
-    function bigBonus() public {
+    function claimBigBonus() public {
         uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
         require(block.timestamp > endTs, "big bonus: not active");
         require(bigBonusUnclaimed, "big bonus: already claimed");
         poolSupply += IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
         bigBonusUnclaimed = false;
+        emit FenixEvent.ClaimBigBonus();
     }
 
     /// @notice Get stake for address at index

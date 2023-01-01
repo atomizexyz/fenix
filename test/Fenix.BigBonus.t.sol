@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake } from "@atomize/Fenix.sol";
+import { Fenix } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -48,45 +48,45 @@ contract FenixBigBonusTest is Test {
         uint256 currentSupply = fenix.poolSupply();
 
         vm.warp(block.timestamp + (8_6400 * 180) + 1);
-        fenix.bigBonus();
+        fenix.claimBigBonus();
 
         uint256 newSupply = fenix.poolSupply();
         assertEq(currentSupply, 3_462200000000000000);
         assertEq(newSupply, 3_462200000000000000);
     }
 
-    function testBigBonusMoreStakes() public {
+    function testClaimBigBonusMoreStakes() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 currentSupply = fenix.poolSupply();
 
         helper.generateXENFor(stakers, xenCrypto);
 
         vm.warp(block.timestamp + (86_400 * 180) + 1);
-        fenix.bigBonus();
+        fenix.claimBigBonus();
 
         uint256 newSupply = fenix.poolSupply();
         assertEq(currentSupply, 3_462200000000000000);
         assertEq(newSupply, 6_922900000000000000);
     }
 
-    function testBigBonusTooEarly() public {
+    function testClaimBigBonusTooEarly() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
         helper.generateXENFor(stakers, xenCrypto);
 
         vm.warp(block.timestamp + (86_400 * 179) - fenix.startTs());
         vm.expectRevert(bytes("big bonus: not active"));
-        fenix.bigBonus();
+        fenix.claimBigBonus();
     }
 
-    function testBigBonusOnlyOnce() public {
+    function testClaimBigBonusOnlyOnce() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
         helper.generateXENFor(stakers, xenCrypto);
 
         vm.warp(block.timestamp + (86_400 * 180));
-        fenix.bigBonus();
+        fenix.claimBigBonus();
         vm.expectRevert(bytes("big bonus: already claimed"));
-        fenix.bigBonus();
+        fenix.claimBigBonus();
     }
 }
