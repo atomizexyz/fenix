@@ -20,10 +20,10 @@ transparency, trust through consensus, and permissionless value exchange without
 
 ## Links
 
-- [https://fenix.fyi]() - Official website
+- [https://fenix.fyi](https://fenix.fyi) - Official website
 - [https://atomize.xyz/fenix](https://atomize.xyz/fenix) - Landing page
 - [Litepaper](https://github.com/atomizexyz/litepaper) - Smart contract litepaper
-- [Documentation]() - GitBook docs
+- [Documentation](https://docs.atomize.xyz) - FENIX documentation
 
 ## Build
 
