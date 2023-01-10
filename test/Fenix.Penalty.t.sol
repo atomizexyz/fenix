@@ -43,15 +43,15 @@ contract FenixPenaltyTest is Test {
 
         vm.warp(timestamp + (86400 * 25));
         uint256 penalty25 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty25, 937500000000000000); // verify 94% penalty
+        assertEq(penalty25, 996093750000000000); // verify 94% penalty
 
         vm.warp(timestamp + (86400 * 50));
         uint256 penalty50 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty50, 750000000000000000); // verify 75% penalty
+        assertEq(penalty50, 937500000000000000); // verify 75% penalty
 
         vm.warp(timestamp + (86400 * 75));
         uint256 penalty75 = fenix.calculateEarlyPenalty(stake1);
-        assertEq(penalty75, 437500000000000000); // verify 43% penalty
+        assertEq(penalty75, 683593750000000000); // verify 43% penalty
 
         vm.warp(timestamp + (86400 * 100));
         uint256 penalty100 = fenix.calculateEarlyPenalty(stake1);

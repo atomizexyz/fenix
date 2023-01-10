@@ -64,6 +64,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
     uint256 internal constant SIZE_BONUS_RATE = 0.10e18;
     uint256 internal constant TIME_BONUS_RATE = 0.20e18;
+    uint256 internal constant EARLY_PENALTY_EXPONENT = 2;
+    uint256 internal constant LATE_PENALTY_EXPONENT = 3;
 
     uint256 internal constant ONE_DAY_SECONDS = 86_400;
     uint256 internal constant ONE_EIGHTY_DAYS = 180;
@@ -133,6 +135,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param fenix the amount of fenix to stake
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
+        require(fenix > 0, "staker: zero fenix");
         require(term <= MAX_STAKE_LENGTH_DAYS, "staker: term too long");
         uint256 bonus = calculateBonus(fenix, term);
 
@@ -272,7 +275,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         require(block.timestamp >= stake.startTs, "early calc: stake not started");
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_SECONDS;
-        UD60x18 base = toUD60x18(termDelta).div(toUD60x18(scaleTerm));
+        UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(EARLY_PENALTY_EXPONENT);
         UD60x18 penalty = toUD60x18(1).sub(base.mul(base));
         return unwrap(penalty);
     }
@@ -289,7 +292,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (lateDay > ONE_EIGHTY_DAYS) return unwrap(toUD60x18(1));
         uint256 rootNumerator = lateDay;
         uint256 rootDenominator = ONE_EIGHTY_DAYS;
-        UD60x18 penalty = (toUD60x18(rootNumerator).div(toUD60x18(rootDenominator))).powu(3);
+        UD60x18 penalty = (toUD60x18(rootNumerator).div(toUD60x18(rootDenominator))).powu(LATE_PENALTY_EXPONENT);
         return unwrap(penalty);
     }
 

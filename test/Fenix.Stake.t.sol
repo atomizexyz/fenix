@@ -218,7 +218,7 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeCount(bob), 0);
     }
 
-    /// @notice Test multiple stakes - Symmetric Split
+    /// @notice Test multiple stakes with symmetric split terms
     function testMultipleStakesSymmetricSplit() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
@@ -253,7 +253,7 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeCount(alice), 0);
     }
 
-    /// @notice Test multiple stakes - Assymetric Term
+    /// @notice Test multiple stakes with assymetric terms
     function testMultipleStakesAssymetricTerm() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 bobTerm = 100;
@@ -292,6 +292,7 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeCount(alice), 0);
     }
 
+    /// @notice Test multiple stakes with wealth redistribution
     function testMultipleStakesWealthRedistribution() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 3560;
@@ -303,14 +304,14 @@ contract FenixStakeTest is Test {
             fenix.startStake(fenixBalance, term);
         }
 
-        vm.warp(blockTs + 1);
+        vm.warp(blockTs + 86400);
 
-        // emergency end stake and redistribute wealth
+        // early end stake and redistribute wealth
         vm.prank(oscar);
         fenix.endStake(0);
 
         uint256 oscarPayout = fenix.balanceOf(oscar);
-        assertEq(oscarPayout, 3451513);
+        assertEq(oscarPayout, 2148567269);
         assertEq(fenix.stakeCount(oscar), 0);
 
         vm.warp(blockTs + (86400 * term));
@@ -321,16 +322,47 @@ contract FenixStakeTest is Test {
         }
 
         uint256 bobPayout = fenix.balanceOf(bob);
-        assertEq(bobPayout, 986159_943237703566120220);
+        assertEq(bobPayout, 986159_943237702981935385);
         uint256 alicePayout = fenix.balanceOf(alice);
-        assertEq(alicePayout, 885809_787231803600844675);
+        assertEq(alicePayout, 885809_787231803076105613);
         uint256 carolPayout = fenix.balanceOf(carol);
-        assertEq(carolPayout, 763031_140137027377914922);
+        assertEq(carolPayout, 763031_140137026925907899);
         uint256 danPayout = fenix.balanceOf(dan);
-        assertEq(danPayout, 604644_373169189878699560);
+        assertEq(danPayout, 604644_373169189520518236);
         uint256 frankPayout = fenix.balanceOf(frank);
-        assertEq(frankPayout, 381515_570068513690394597);
+        assertEq(frankPayout, 381515_570068513464391085);
 
         assertEq(fenix.poolSupply(), 0);
+    }
+
+    /// @notice Test long staker who ends early redistributing wealth
+    function testLongStakeWithEarlyPenaltyVersusShortTerm() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 365;
+        uint256 longTerm = 365 * 50;
+        uint256 blockTs = block.timestamp;
+
+        uint256 oscarFenixBalance = fenix.balanceOf(oscar);
+        vm.prank(oscar);
+        fenix.startStake(oscarFenixBalance, term);
+
+        uint256 frankFenixBalance = fenix.balanceOf(frank);
+        vm.prank(frank);
+        fenix.startStake(frankFenixBalance, longTerm);
+
+        vm.warp(blockTs + (86400 * term));
+
+        vm.prank(oscar);
+        fenix.endStake(0);
+
+        vm.prank(frank);
+        fenix.endStake(0); // early end stake
+
+        uint256 oscarPayout = fenix.balanceOf(oscar);
+        uint256 frankPayout = fenix.balanceOf(frank);
+
+        assertGt(oscarPayout, frankPayout); // verify
+        assertEq(oscarPayout, 15121138352912100500613755209_747062898759474079); // verify
+        assertEq(frankPayout, 16936676486417001863385987_314827642949368499); // verify
     }
 }
