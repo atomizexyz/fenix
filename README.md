@@ -62,7 +62,8 @@ yarn lint
 - [Bitcoin](https://github.com/bitcoin/bitcoin) (Jan 8, 2009) - Censorship resistant zero counter party risk value
   storage and transfer
 - [Cereneum](https://github.com/Cereneum/Cereneum) (June 6, 2019) - Time-based interest-bearing Cryptographic
-  Certificate of Interest
-- [HEX](https://github.com/BitcoinHEX/contract) (Dec 2, 2019) - T-Shares
+  Certificate of Interest (Trustless Yield)
+- [HEX](https://github.com/BitcoinHEX/contract) (Dec 2, 2019) - Share rate ratcheting that increases the cost basis of
+  later stakers
 - [Uniswap V2](https://github.com/Uniswap/v2-core) (May 18, 2020) - Equity based liquidity pools
 - [XEN Crypto](https://github.com/FairCrypto/XEN-crypto) (Oct 8, 2022) - Cross-chain protocol launch
