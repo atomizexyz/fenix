@@ -22,6 +22,9 @@ contract FenixBigBonusTest is Test {
 
     address[] internal stakers;
 
+    error BonusNotActive();
+    error BonusClaimed();
+
     /// ============ Setup test suite ============
 
     function setUp() public {
@@ -75,7 +78,7 @@ contract FenixBigBonusTest is Test {
         helper.generateXENFor(stakers, xenCrypto);
 
         vm.warp(block.timestamp + (86_400 * 179) - fenix.startTs());
-        vm.expectRevert(bytes("big bonus: not active"));
+        vm.expectRevert(BonusNotActive.selector);
         fenix.claimBigBonus();
     }
 
@@ -86,7 +89,7 @@ contract FenixBigBonusTest is Test {
 
         vm.warp(block.timestamp + (86_400 * 180));
         fenix.claimBigBonus();
-        vm.expectRevert(bytes("big bonus: already claimed"));
+        vm.expectRevert(BonusClaimed.selector);
         fenix.claimBigBonus();
     }
 }
