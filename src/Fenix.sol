@@ -101,7 +101,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Variables
     ///----------------------------------------------------------------------------------------------------------------
 
-    uint40 public startTs = 0;
+    uint40 public immutable startTs;
     uint256 public shareRate = 1e18;
 
     uint256 public maxInflationEndTs = 0;
