@@ -76,6 +76,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     ///----------------------------------------------------------------------------------------------------------------
 
     address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    // address internal constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
     uint256 internal constant SIZE_BONUS_RATE = 0.10e18;
@@ -89,7 +90,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant TIME_BONUS = 1_820;
     uint256 internal constant MAX_STAKE_LENGTH_DAYS = 365 * 50;
     uint256 internal constant XEN_RATIO = 10_000;
-    uint256 internal constant MIN_SIZE_BONUS_ASH = 3;
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Variables
@@ -109,6 +109,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     bool public bigBonusUnclaimed = true;
 
     mapping(address => Stake[]) public stakes;
+    mapping(address => Stake[]) public stakesEnded;
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Contract
@@ -243,6 +244,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             shareRate = returnOnStake;
         }
 
+        stakesEnded[msg.sender].push(_stake);
+
         uint256 lastIndex = stakes[msg.sender].length - 1;
         if (stakeIndex != lastIndex) {
             stakes[msg.sender][stakeIndex] = stakes[msg.sender][lastIndex];
@@ -336,5 +339,22 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @return stake count
     function stakeCount(address stakerAddress) public view returns (uint256) {
         return stakes[stakerAddress].length;
+    }
+
+    /// @notice Get ended stake for address at index
+    /// @dev Read stake from stakesEnded mapping stake array
+    /// @param stakerAddress address of stake owner
+    /// @param stakeIndex index of stake to read
+    /// @return stake
+    function endedStakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
+        return stakesEnded[stakerAddress][stakeIndex];
+    }
+
+    /// @notice Get ended stake count for address
+    /// @dev Read stake count from stakesEnded mapping
+    /// @param stakerAddress address of stake owner
+    /// @return stake count
+    function endedStakeCount(address stakerAddress) public view returns (uint256) {
+        return stakesEnded[stakerAddress].length;
     }
 }

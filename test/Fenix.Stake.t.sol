@@ -365,4 +365,24 @@ contract FenixStakeTest is Test {
         assertEq(oscarPayout, 15121138352912100500613755209_747062898759474079); // verify
         assertEq(frankPayout, 16936676486417001863385987_314827642949368499); // verify
     }
+
+    function testEndStakeArray() public {
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+        uint256 term = 100;
+        uint256 blockTs = block.timestamp;
+
+        uint256 bobFenixBalance = fenix.balanceOf(bob);
+        vm.prank(bob);
+        fenix.startStake(bobFenixBalance, term);
+
+        vm.warp(blockTs + (86400 * term));
+
+        // end stakes
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        uint256 endStakeCount = fenix.endedStakeCount(bob);
+
+        assertEq(endStakeCount, 1); // verify
+    }
 }
