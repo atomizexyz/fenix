@@ -71,7 +71,7 @@ contract FenixStakeTest is Test {
     function testSplitStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 365;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 halfBalance = 1e15;
 
@@ -92,7 +92,7 @@ contract FenixStakeTest is Test {
         vm.prank(bob);
         fenix.endStake(0);
         vm.prank(bob);
-        fenix.endStake(0);
+        fenix.endStake(1);
 
         vm.prank(alice);
         fenix.endStake(0);
@@ -122,15 +122,16 @@ contract FenixStakeTest is Test {
     function testDeferEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * term));
+        vm.warp(blockTs + (86400 * term));
         fenix.deferStake(0, bob);
 
         assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
-        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, uint40(block.timestamp));
         assertEq(fenix.stakeFor(bob, 0).payout, 5_963214217430343893);
         assertEq(fenix.stakeCount(bob), 1);
     }
@@ -142,22 +143,23 @@ contract FenixStakeTest is Test {
         vm.prank(bob);
         fenix.endStake(0);
 
-        assertEq(fenix.stakeCount(bob), 0);
+        assertEq(fenix.stakeCount(bob), 1);
     }
 
     /// @notice Test deferring late stake
     function testDeferLateStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * term) + 1);
+        vm.warp(blockTs + (86400 * term) + 1);
         fenix.deferStake(0, bob);
 
         assertEq(fenix.stakeFor(bob, 0).stakeId, 0);
-        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, uint40(block.timestamp));
         assertEq(fenix.stakeFor(bob, 0).payout, 5_963214217430343893);
         assertEq(fenix.stakeCount(bob), 1);
     }
@@ -169,18 +171,19 @@ contract FenixStakeTest is Test {
         vm.prank(bob);
         fenix.endStake(0);
 
-        assertEq(fenix.stakeCount(bob), 0);
+        assertEq(fenix.stakeCount(bob), 1);
     }
 
     /// @notice Test prevent other non owner from early defer
     function testNonOwnerDeferEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + 86400);
+        vm.warp(blockTs + 86400);
 
         vm.expectRevert(OnlyOwnerCanEndEarly.selector);
         vm.prank(chad);
@@ -192,15 +195,16 @@ contract FenixStakeTest is Test {
     function testNonOwnerDeferLateStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * term) + 1);
+        vm.warp(blockTs + (86400 * term) + 1);
 
         vm.prank(chad);
         fenix.deferStake(0, bob);
-        assertEq(fenix.stakeFor(bob, 0).deferralTs, block.timestamp);
+        assertEq(fenix.stakeFor(bob, 0).deferralTs, uint40(block.timestamp));
         assertEq(fenix.stakeFor(bob, 0).payout, 5_963214217430343893);
         assertEq(fenix.stakeCount(bob), 1);
     }
@@ -209,23 +213,25 @@ contract FenixStakeTest is Test {
     function testEndingEarlyStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         fenix.startStake(fenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * term));
+        vm.warp(blockTs + (86400 * term));
         fenix.endStake(0);
 
         uint256 fenixPayoutBalance = fenix.balanceOf(bob);
 
         assertEq(fenixPayoutBalance, 5_963214217430343893);
-        assertEq(fenix.stakeCount(bob), 0);
+        assertEq(fenix.stakeCount(bob), 1);
     }
 
     /// @notice Test multiple stakes with symmetric split terms
     function testMultipleStakesSymmetricSplit() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
+        uint40 blockTs = uint40(block.timestamp);
 
         // start stakes
 
@@ -237,7 +243,7 @@ contract FenixStakeTest is Test {
         vm.prank(alice);
         fenix.startStake(aliceFenixBalance, term);
 
-        vm.warp(block.timestamp + (86400 * term));
+        vm.warp(blockTs + (86400 * term));
 
         // end stakes
         vm.prank(bob);
@@ -251,10 +257,10 @@ contract FenixStakeTest is Test {
         uint256 alicePayout = fenix.balanceOf(alice);
 
         assertEq(bobPayout, 3_141441284256474392);
-        assertEq(fenix.stakeCount(bob), 0);
+        assertEq(fenix.stakeCount(bob), 1);
 
         assertEq(alicePayout, 2_821772933173869501);
-        assertEq(fenix.stakeCount(alice), 0);
+        assertEq(fenix.stakeCount(alice), 1);
     }
 
     /// @notice Test multiple stakes with assymetric terms
@@ -263,7 +269,7 @@ contract FenixStakeTest is Test {
         uint256 bobTerm = 100;
         uint256 aliceTerm = 365;
 
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
         // start stakes
         uint256 bobFenixBalance = fenix.balanceOf(bob);
         vm.prank(bob);
@@ -290,17 +296,17 @@ contract FenixStakeTest is Test {
 
         assertGt(alicePayout, bobPayout);
         assertEq(bobPayout, 12_641143294713773849);
-        assertEq(fenix.stakeCount(bob), 0);
+        assertEq(fenix.stakeCount(bob), 1);
 
         assertEq(alicePayout, 12_822260899977946379);
-        assertEq(fenix.stakeCount(alice), 0);
+        assertEq(fenix.stakeCount(alice), 1);
     }
 
     /// @notice Test multiple stakes with wealth redistribution
     function testMultipleStakesWealthRedistribution() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 3560;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         for (uint256 i = 0; i < stakers.length; i++) {
             uint256 fenixBalance = fenix.balanceOf(stakers[i]);
@@ -316,7 +322,7 @@ contract FenixStakeTest is Test {
 
         uint256 oscarPayout = fenix.balanceOf(oscar);
         assertEq(oscarPayout, 2148567269);
-        assertEq(fenix.stakeCount(oscar), 0);
+        assertEq(fenix.stakeCount(oscar), 1);
 
         vm.warp(blockTs + (86400 * term));
 
@@ -344,7 +350,7 @@ contract FenixStakeTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 365;
         uint256 longTerm = 365 * 50;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 oscarFenixBalance = fenix.balanceOf(oscar);
         vm.prank(oscar);
@@ -374,7 +380,7 @@ contract FenixStakeTest is Test {
     function testEndStakeArray() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 bobFenixBalance = fenix.balanceOf(bob);
         vm.prank(bob);
@@ -386,15 +392,15 @@ contract FenixStakeTest is Test {
         vm.prank(bob);
         fenix.endStake(0);
 
-        uint256 endStakeCount = fenix.endedStakeCount(bob);
+        // uint256 endStakeCount = fenix.endedStakeCount(bob);
 
-        assertEq(endStakeCount, 1); // verify
+        // assertEq(endStakeCount, 1); // verify
     }
 
     function testEndingInvalidStake() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 term = 100;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         uint256 bobFenixBalance = fenix.balanceOf(bob);
         vm.prank(bob);
@@ -403,7 +409,7 @@ contract FenixStakeTest is Test {
         vm.warp(blockTs + (86400 * term));
 
         // end stakes
-        vm.prank(bob);
+        // vm.prank(bob);
         // FIX this test
         // fenix.endStake(100);
     }

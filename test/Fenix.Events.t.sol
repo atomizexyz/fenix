@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake, FenixEvent } from "@atomize/Fenix.sol";
+import { Fenix, Stake, FenixEvent, Status } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -42,6 +42,7 @@ contract FenixTest is Test {
 
         uint256 baseTerm = 100;
         Stake memory verifyStake = Stake(
+            Status.ACTIVE,
             86402,
             0,
             0,
@@ -66,9 +67,10 @@ contract FenixTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
         uint256 baseTerm = 100;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyDeferral = Stake(
+            Status.DEFER,
             86402,
             8726402,
             0,
@@ -98,9 +100,10 @@ contract FenixTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
         uint256 baseTerm = 100;
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyEnd = Stake(
+            Status.END,
             86402,
             8726402,
             0,
@@ -129,7 +132,7 @@ contract FenixTest is Test {
     function testClaimBigBonusEvent() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
-        uint256 blockTs = block.timestamp;
+        uint40 blockTs = uint40(block.timestamp);
 
         vm.warp(blockTs + (86_400 * 180) + 1);
 

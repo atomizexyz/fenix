@@ -24,9 +24,16 @@ import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
 import { console } from "forge-std/console.sol";
 
+enum Status {
+    ACTIVE,
+    DEFER,
+    END
+}
+
 struct Stake {
-    uint256 startTs;
-    uint256 deferralTs;
+    Status status;
+    uint40 startTs;
+    uint40 deferralTs;
     uint256 stakeId;
     uint256 term;
     uint256 fenix;
@@ -74,8 +81,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    address internal constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
-    // address internal constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+    address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 internal constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
     uint256 internal constant SIZE_BONUS_RATE = 0.10e18;
@@ -94,7 +101,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Variables
     ///----------------------------------------------------------------------------------------------------------------
 
-    uint256 public startTs = 0;
+    uint40 public startTs = 0;
     uint256 public shareRate = 1e18;
 
     uint256 public maxInflationEndTs = 0;
@@ -108,7 +115,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     bool public bigBonusUnclaimed = true;
 
     mapping(address => Stake[]) public stakes;
-    mapping(address => Stake[]) public stakesEnded;
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Errors
@@ -123,13 +129,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     error StakeNotEnded();
     error BonusNotActive();
     error BonusClaimed();
+    error StakeAlreadyEnded();
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Contract
     ///----------------------------------------------------------------------------------------------------------------
 
     constructor() ERC20("FENIX", "FENIX", 18) {
-        startTs = block.timestamp;
+        startTs = uint40(block.timestamp);
         poolSupply = ERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
     }
 
@@ -171,7 +178,17 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         // Convert effective FENIX bonus to shares
         uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
-        Stake memory _stake = Stake(block.timestamp, 0, currentStakeId, term, fenix, bonus, shares, 0);
+        Stake memory _stake = Stake(
+            Status.ACTIVE,
+            uint40(block.timestamp),
+            0,
+            currentStakeId,
+            term,
+            fenix,
+            bonus,
+            shares,
+            0
+        );
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
@@ -220,8 +237,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
 
         stakes[stakerAddress][stakeIndex] = Stake(
+            Status.DEFER,
             _stake.startTs,
-            block.timestamp,
+            uint40(block.timestamp),
             _stake.stakeId,
             _stake.term,
             _stake.fenix,
@@ -244,21 +262,30 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         deferStake(stakeIndex, msg.sender);
 
         Stake memory _stake = stakes[msg.sender][stakeIndex];
+        if (_stake.status == Status.END) revert StakeAlreadyEnded();
+        emit FenixEvent.EndStake(_stake);
+
         _mint(msg.sender, _stake.payout);
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
 
-        stakesEnded[msg.sender].push(_stake);
+        Stake memory endedStake = Stake(
+            Status.END,
+            _stake.startTs,
+            _stake.deferralTs,
+            _stake.stakeId,
+            _stake.term,
+            _stake.fenix,
+            _stake.bonus,
+            _stake.shares,
+            _stake.payout
+        );
 
-        uint256 lastIndex = stakes[msg.sender].length - 1;
-        if (stakeIndex != lastIndex) {
-            stakes[msg.sender][stakeIndex] = stakes[msg.sender][lastIndex];
-        }
+        stakes[msg.sender][stakeIndex] = endedStake;
 
-        stakes[msg.sender].pop();
-        emit FenixEvent.EndStake(_stake);
+        emit FenixEvent.EndStake(endedStake);
     }
 
     /// @notice Calculate share bonus
@@ -345,22 +372,5 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @return stake count
     function stakeCount(address stakerAddress) public view returns (uint256) {
         return stakes[stakerAddress].length;
-    }
-
-    /// @notice Get ended stake for address at index
-    /// @dev Read stake from stakesEnded mapping stake array
-    /// @param stakerAddress address of stake owner
-    /// @param stakeIndex index of stake to read
-    /// @return stake
-    function endedStakeFor(address stakerAddress, uint256 stakeIndex) public view returns (Stake memory) {
-        return stakesEnded[stakerAddress][stakeIndex];
-    }
-
-    /// @notice Get ended stake count for address
-    /// @dev Read stake count from stakesEnded mapping
-    /// @param stakerAddress address of stake owner
-    /// @return stake count
-    function endedStakeCount(address stakerAddress) public view returns (uint256) {
-        return stakesEnded[stakerAddress].length;
     }
 }

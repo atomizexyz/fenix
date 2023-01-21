@@ -88,12 +88,12 @@ contract FenixShareTest is Test {
 
             vm.warp(blockTs + (86_400 * (i + launchTerm)));
             vm.prank(bob);
-            fenix.endStake(0);
+            fenix.endStake(i);
         }
 
         vm.warp(blockTs + (86_400 * (longTerm + launchTerm)));
         vm.prank(alice);
-        fenix.endStake(0);
+        fenix.endStake(1);
 
         uint256 bobFinalBalance = fenix.balanceOf(bob);
         uint256 aliceFinalBalance = fenix.balanceOf(alice);
