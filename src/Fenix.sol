@@ -17,9 +17,8 @@ pragma solidity ^0.8.13;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import "@prb/math/UD60x18.sol";
+import { UD60x18, toUD60x18, fromUD60x18, wrap, unwrap, ud } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
@@ -117,7 +116,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = block.timestamp;
-        poolSupply = IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
+        poolSupply = ERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -319,7 +318,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
         require(block.timestamp > endTs, "big bonus: not active");
         require(bigBonusUnclaimed, "big bonus: already claimed");
-        poolSupply += IERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
+        poolSupply += ERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
         bigBonusUnclaimed = false;
         emit FenixEvent.ClaimBigBonus();
     }
