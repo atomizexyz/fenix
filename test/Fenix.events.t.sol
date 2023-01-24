@@ -78,7 +78,7 @@ contract FenixTest is Test {
             330000000000000000,
             379902501829349467,
             379902501829349467,
-            817080668867198164
+            759563839352244452
         );
 
         uint256 bobFenixBalance = fenix.balanceOf(bob);
@@ -111,7 +111,7 @@ contract FenixTest is Test {
             330000000000000000,
             379902501829349467,
             379902501829349467,
-            817080668867198164
+            759563839352244452
         );
 
         uint256 bobFenixBalance = fenix.balanceOf(bob);

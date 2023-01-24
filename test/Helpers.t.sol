@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix } from "@atomize/Fenix.sol";
+import { Fenix, Stake } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 
 contract HelpersTest is Test {
@@ -37,5 +37,17 @@ contract HelpersTest is Test {
             vm.prank(users[i]);
             xenCrypto.claimMintReward();
         }
+    }
+
+    function printStake(Stake memory stake) public view {
+        console.log("status: ", uint8(stake.status));
+        console.log("startTs: ", stake.startTs);
+        console.log("deferralTs: ", stake.deferralTs);
+        console.log("stakeId: ", stake.stakeId);
+        console.log("term: ", stake.term);
+        console.log("fenix: ", stake.fenix);
+        console.log("bonus: ", stake.bonus);
+        console.log("shares: ", stake.shares);
+        console.log("payout: ", stake.payout);
     }
 }

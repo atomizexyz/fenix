@@ -7,7 +7,7 @@ import { Fenix } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
-contract FenixBigBonusTest is Test {
+contract BigBonusTest is Test {
     HelpersTest internal helper;
     Fenix internal fenix;
     XENCrypto internal xenCrypto;

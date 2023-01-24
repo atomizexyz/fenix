@@ -84,7 +84,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
     // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
-    uint256 public constant ANNUAL_INFLATION_RATE = 3_141592653589793238;
+    uint256 public constant ANNUAL_INFLATION_RATE = 1_618033988749894848;
     uint256 public constant SIZE_BONUS_RATE = 0.10e18;
     uint256 public constant TIME_BONUS_RATE = 0.20e18;
     uint256 public constant EARLY_PENALTY_EXPONENT = 2;

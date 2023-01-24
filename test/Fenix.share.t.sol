@@ -45,7 +45,7 @@ contract FenixShareTest is Test {
         fenix.endStake(0);
 
         assertGt(fenix.shareRate(), 1e18); // verify
-        assertEq(fenix.shareRate(), 3_952004053740594933); // verify
+        assertEq(fenix.shareRate(), 3_603417208195420921); // verify
         assertEq(fenix.poolSupply(), 0); // verify
     }
 
