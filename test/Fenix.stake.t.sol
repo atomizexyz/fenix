@@ -105,7 +105,7 @@ contract FenixStakeTest is Test {
 
     /// @notice Test starting stake below max length
     function testStartMaxStake() public {
-        uint256 maxStakeDays = 18250;
+        uint256 maxStakeDays = 20_075; // 365 * 55
         uint256 maxStakeDaysPlusOne = maxStakeDays + 1;
 
         helper.getFenixFor(stakers, fenix, xenCrypto);
