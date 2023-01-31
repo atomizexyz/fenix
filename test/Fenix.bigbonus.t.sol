@@ -50,12 +50,12 @@ contract BigBonusTest is Test {
 
         uint256 currentSupply = fenix.poolSupply();
 
-        vm.warp(block.timestamp + (8_6400 * 180) + 1);
+        vm.warp(block.timestamp + (86_400 * 7 * 3));
         fenix.claimBigBonus();
 
         uint256 newSupply = fenix.poolSupply();
-        assertEq(currentSupply, 3_462200000000000000);
-        assertEq(newSupply, 3_462200000000000000);
+        assertEq(currentSupply, 1);
+        assertEq(newSupply, 3_462200000000000001);
     }
 
     function testClaimBigBonusMoreStakes() public {
@@ -63,13 +63,14 @@ contract BigBonusTest is Test {
         uint256 currentSupply = fenix.poolSupply();
 
         helper.generateXENFor(stakers, xenCrypto);
+        helper.getFenixFor(stakers, fenix, xenCrypto);
 
-        vm.warp(block.timestamp + (86_400 * 180) + 1);
+        vm.warp(block.timestamp + (86_400 * 7 * 3));
         fenix.claimBigBonus();
 
         uint256 newSupply = fenix.poolSupply();
-        assertEq(currentSupply, 3_462200000000000000);
-        assertEq(newSupply, 6_922900000000000000);
+        assertEq(currentSupply, 1);
+        assertEq(newSupply, 6_922900000000000001);
     }
 
     function testClaimBigBonusTooEarly() public {
@@ -77,7 +78,7 @@ contract BigBonusTest is Test {
 
         helper.generateXENFor(stakers, xenCrypto);
 
-        vm.warp(block.timestamp + (86_400 * 179) - fenix.startTs());
+        vm.warp(block.timestamp + 86_400);
         vm.expectRevert(BonusNotActive.selector);
         fenix.claimBigBonus();
     }
@@ -87,9 +88,9 @@ contract BigBonusTest is Test {
 
         helper.generateXENFor(stakers, xenCrypto);
 
-        vm.warp(block.timestamp + (86_400 * 180));
+        vm.warp(block.timestamp + (86_400 * 7 * 3));
         fenix.claimBigBonus();
-        vm.expectRevert(BonusClaimed.selector);
+        vm.expectRevert(BonusNotActive.selector);
         fenix.claimBigBonus();
     }
 }

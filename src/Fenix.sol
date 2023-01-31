@@ -94,25 +94,28 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public constant ONE_EIGHTY_DAYS = 180;
     uint256 public constant ONE_YEAR_DAYS = 365;
     uint256 public constant TIME_BONUS = 1_820;
-    uint256 public constant MAX_STAKE_LENGTH_DAYS = 365 * 55;
+    uint256 public constant MAX_STAKE_LENGTH_DAYS = 365 * 55; // 55 years
     uint256 public constant XEN_RATIO = 10_000;
+    uint256 public constant BIG_BONUS_COOLDOWN = 86_400 * 7 * 13; // 13 weeks
+    uint256 public constant BIG_BONUS_LAUNCH_OFFSET = 86_400 * 7 * 10; // 10 weeks
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Variables
     ///----------------------------------------------------------------------------------------------------------------
 
     uint40 public immutable startTs;
+    uint256 public bigBonusUnlockTs;
+    uint256 public bigBonusPoolSupply = 0;
+
     uint256 public shareRate = 1e18;
 
     uint256 public maxInflationEndTs = 0;
 
-    uint256 public poolSupply = 0;
+    uint256 public poolSupply = 1;
     uint256 public poolTotalShares = 0;
     uint256 public poolTotalStakes = 0;
 
     uint256 public currentStakeId = 0;
-
-    bool public bigBonusUnclaimed = true;
 
     mapping(address => Stake[]) public stakes;
 
@@ -128,7 +131,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     error StakeNotStarted();
     error StakeNotEnded();
     error BonusNotActive();
-    error BonusClaimed();
     error StakeAlreadyEnded();
 
     ///----------------------------------------------------------------------------------------------------------------
@@ -137,7 +139,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = uint40(block.timestamp);
-        poolSupply = ERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
+        bigBonusUnlockTs = uint40(block.timestamp + BIG_BONUS_COOLDOWN - BIG_BONUS_LAUNCH_OFFSET);
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -156,6 +158,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (user == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
         uint256 fenix = amount / XEN_RATIO;
+        bigBonusPoolSupply += fenix;
         _mint(user, fenix);
         emit FenixEvent.FenixMinted(user, fenix);
     }
@@ -197,7 +200,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             UD60x18 exponent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
             UD60x18 newPoolSupply = toUD60x18(poolSupply).mul(root.pow(exponent));
             poolSupply = fromUD60x18(newPoolSupply) + fenix;
-
             maxInflationEndTs = endTs;
         }
 
@@ -214,6 +216,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param stakeIndex the index of the stake to defer
     /// @param stakerAddress the address of the stake owner that will be deferred
     function deferStake(uint256 stakeIndex, address stakerAddress) public {
+        if (stakes[stakerAddress].length <= stakeIndex) revert StakeNotStarted();
         Stake storage _stake = stakes[stakerAddress][stakeIndex];
 
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
@@ -266,7 +269,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         emit FenixEvent.EndStake(_stake);
 
         _mint(msg.sender, _stake.payout);
+
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
+
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
@@ -349,11 +354,11 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     }
 
     function claimBigBonus() public {
-        uint256 endTs = startTs + (ONE_EIGHTY_DAYS * ONE_DAY_SECONDS);
-        if (block.timestamp <= endTs) revert BonusNotActive();
-        if (!bigBonusUnclaimed) revert BonusClaimed();
-        poolSupply += ERC20(XEN_ADDRESS).totalSupply() / XEN_RATIO;
-        bigBonusUnclaimed = false;
+        if (block.timestamp < bigBonusUnlockTs) revert BonusNotActive();
+        uint256 cooldownPeriods = (block.timestamp - bigBonusUnlockTs) / BIG_BONUS_COOLDOWN;
+        poolSupply += bigBonusPoolSupply;
+        bigBonusPoolSupply = 0;
+        bigBonusUnlockTs = bigBonusUnlockTs + uint40(BIG_BONUS_COOLDOWN + (cooldownPeriods * BIG_BONUS_COOLDOWN));
         emit FenixEvent.ClaimBigBonus();
     }
 

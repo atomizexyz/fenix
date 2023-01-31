@@ -34,7 +34,7 @@ contract FenixShareTest is Test {
     /// @notice Test that the contract can be deployed successfully
     function testShareRateUpdate() public {
         helper.getFenixFor(stakers, fenix, xenCrypto);
-        uint256 term = 100;
+        uint256 term = 365;
 
         uint256 fenixBalance = fenix.balanceOf(bob);
         vm.prank(bob);
@@ -45,7 +45,7 @@ contract FenixShareTest is Test {
         fenix.endStake(0);
 
         assertGt(fenix.shareRate(), 1e18); // verify
-        assertEq(fenix.shareRate(), 3_603417208195420921); // verify
+        assertEq(fenix.shareRate(), 1_000000000000000006); // verify
         assertEq(fenix.poolSupply(), 0); // verify
     }
 
