@@ -12,10 +12,6 @@ contract FenixTest is Test {
     Fenix internal fenix;
     XENCrypto internal xenCrypto;
 
-    address internal bob = address(this);
-
-    address[] internal stakers;
-
     /// ============ Setup test suite ============
 
     function setUp() public {
@@ -23,14 +19,11 @@ contract FenixTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
-        stakers.push(bob);
-
-        helper.generateXENFor(stakers, xenCrypto);
         fenix = new Fenix();
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testMetadata() public {
+    function test_metadata() public {
         assertEq(fenix.name(), "FENIX");
         assertEq(fenix.symbol(), "FENIX");
         assertEq(fenix.decimals(), 18);

@@ -72,6 +72,21 @@ library FenixEvent {
     event ClaimBigBonus();
 }
 
+///----------------------------------------------------------------------------------------------------------------
+/// Events
+///----------------------------------------------------------------------------------------------------------------
+library FenixError {
+    error WrongCaller(address caller);
+    error AddressZero();
+    error BalanceZero();
+    error TermZero();
+    error TermGreaterThanMax();
+    error StakeNotStarted();
+    error StakeNotEnded();
+    error BonusNotActive();
+    error StakeStatusAlreadySet(Status status);
+}
+
 /// @title FENIX pays you to hold your own crypto
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
@@ -120,20 +135,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     mapping(address => Stake[]) public stakes;
 
     ///----------------------------------------------------------------------------------------------------------------
-    /// Errors
-    ///----------------------------------------------------------------------------------------------------------------
-
-    error WrongCaller(address caller);
-    error ZeroAddress();
-    error ZeroAmount();
-    error TermTooLong();
-    error OnlyOwnerCanEndEarly();
-    error StakeNotStarted();
-    error StakeNotEnded();
-    error BonusNotActive();
-    error StakeAlreadyEnded();
-
-    ///----------------------------------------------------------------------------------------------------------------
     /// Contract
     ///----------------------------------------------------------------------------------------------------------------
 
@@ -154,9 +155,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param user the address of the user to mint FENIX tokens for
     /// @param amount the amount of FENIX tokens to mint
     function onTokenBurned(address user, uint256 amount) external {
-        if (msg.sender != XEN_ADDRESS) revert WrongCaller(msg.sender);
-        if (user == address(0)) revert ZeroAddress();
-        if (amount == 0) revert ZeroAmount();
+        if (msg.sender != XEN_ADDRESS) revert FenixError.WrongCaller(msg.sender);
+        if (user == address(0)) revert FenixError.AddressZero();
+        if (amount == 0) revert FenixError.BalanceZero();
         uint256 fenix = amount / XEN_RATIO;
         bigBonusPoolSupply += fenix;
         _mint(user, fenix);
@@ -175,8 +176,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param fenix the amount of fenix to stake
     /// @param term the number of days to stake
     function startStake(uint256 fenix, uint256 term) public {
-        if (fenix == 0) revert ZeroAmount();
-        if (term > MAX_STAKE_LENGTH_DAYS) revert TermTooLong();
+        if (fenix == 0) revert FenixError.BalanceZero();
+        if (term == 0) revert FenixError.TermZero();
+        if (term > MAX_STAKE_LENGTH_DAYS) revert FenixError.TermGreaterThanMax();
         uint256 bonus = calculateBonus(fenix, term);
 
         // Convert effective FENIX bonus to shares
@@ -192,6 +194,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             shares,
             0
         );
+
         stakes[msg.sender].push(_stake);
 
         uint256 endTs = block.timestamp + term;
@@ -207,6 +210,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         ++poolTotalStakes;
         ++currentStakeId;
+
         _burn(msg.sender, fenix);
         emit FenixEvent.StartStake(_stake);
     }
@@ -216,15 +220,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param stakeIndex the index of the stake to defer
     /// @param stakerAddress the address of the stake owner that will be deferred
     function deferStake(uint256 stakeIndex, address stakerAddress) public {
-        if (stakes[stakerAddress].length <= stakeIndex) revert StakeNotStarted();
-        Stake storage _stake = stakes[stakerAddress][stakeIndex];
+        if (stakes[stakerAddress].length <= stakeIndex) revert FenixError.StakeNotStarted();
+        Stake memory _stake = stakes[stakerAddress][stakeIndex];
 
+        if (_stake.status == Status.DEFER || _stake.status == Status.END) return;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
         uint256 payout = 0;
 
-        if (_stake.deferralTs > 0) return;
-
-        if (block.timestamp < endTs && msg.sender != stakerAddress) revert OnlyOwnerCanEndEarly();
+        if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
 
         UD60x18 stakeShares = toUD60x18(_stake.shares);
         UD60x18 poolEquity = stakeShares.div(toUD60x18(poolTotalShares));
@@ -265,13 +268,12 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         deferStake(stakeIndex, msg.sender);
 
         Stake memory _stake = stakes[msg.sender][stakeIndex];
-        if (_stake.status == Status.END) revert StakeAlreadyEnded();
-        emit FenixEvent.EndStake(_stake);
+        if (_stake.status == Status.END) revert FenixError.StakeStatusAlreadySet(Status.END);
 
+        emit FenixEvent.EndStake(_stake);
         _mint(msg.sender, _stake.payout);
 
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
-
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
         }
@@ -329,7 +331,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param stake the stake to calculate the penalty for
     /// @return penalty the penalty percentage for the stake
     function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {
-        if (block.timestamp < stake.startTs) revert StakeNotStarted();
+        if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_SECONDS;
         UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(EARLY_PENALTY_EXPONENT);
@@ -343,8 +345,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @return penalty the penalty percentage for the stake
     function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
         uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
-        if (block.timestamp < stake.startTs) revert StakeNotStarted();
-        if (block.timestamp < endTs) revert StakeNotEnded();
+        if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
+        if (block.timestamp < endTs) revert FenixError.StakeNotEnded();
         uint256 lateDay = (block.timestamp - endTs) / ONE_DAY_SECONDS;
         if (lateDay > ONE_EIGHTY_DAYS) return unwrap(toUD60x18(1));
         uint256 rootNumerator = lateDay;
@@ -353,8 +355,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return unwrap(penalty);
     }
 
-    function claimBigBonus() public {
-        if (block.timestamp < bigBonusUnlockTs) revert BonusNotActive();
+    function claimAdoptoinBonus() public {
+        if (block.timestamp < bigBonusUnlockTs) revert FenixError.BonusNotActive();
         uint256 cooldownPeriods = (block.timestamp - bigBonusUnlockTs) / BIG_BONUS_COOLDOWN;
         poolSupply += bigBonusPoolSupply;
         bigBonusPoolSupply = 0;
