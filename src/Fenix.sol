@@ -114,8 +114,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public constant TIME_BONUS = 1_820;
     uint256 public constant MAX_STAKE_LENGTH_DAYS = 365 * 55; // 55 years
     uint256 public constant XEN_RATIO = 10_000;
-    uint256 public constant BIG_BONUS_COOLDOWN = 86_400 * 7 * 13; // 13 weeks
-    uint256 public constant BIG_BONUS_LAUNCH_OFFSET = 86_400 * 7 * 10; // 10 weeks
+    uint256 public constant REWARD_COOLDOWN = 86_400 * 7 * 13; // 13 weeks
+    uint256 public constant REWARD_LAUNCH_COOLDOWN = 86_400 * 7 * 3; // 10 weeks
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Variables
@@ -141,7 +141,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = uint40(block.timestamp);
-        cooldownUnlockTs = uint40(block.timestamp + BIG_BONUS_COOLDOWN - BIG_BONUS_LAUNCH_OFFSET);
+        cooldownUnlockTs = block.timestamp + REWARD_LAUNCH_COOLDOWN;
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -345,9 +345,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     function flushRewardPool() public {
         if (block.timestamp < cooldownUnlockTs) revert FenixError.CooldownActive();
-        uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / BIG_BONUS_COOLDOWN;
+        uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN;
         stakePoolSupply += rewardPoolSupply;
-        cooldownUnlockTs += uint40(BIG_BONUS_COOLDOWN + (cooldownPeriods * BIG_BONUS_COOLDOWN));
+        cooldownUnlockTs += REWARD_COOLDOWN + (cooldownPeriods * REWARD_COOLDOWN);
         rewardPoolSupply = 0;
         emit FenixEvent.FlushRewardPool();
     }
