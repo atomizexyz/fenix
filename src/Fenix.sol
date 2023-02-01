@@ -36,7 +36,6 @@ struct Stake {
     uint40 deferralTs;
     uint16 term;
     uint256 fenix;
-    uint256 bonus;
     uint256 shares;
     uint256 payout;
 }
@@ -185,7 +184,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         // Convert effective FENIX bonus to shares
         uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
-        Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, bonus, shares, 0);
+        Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, shares, 0);
 
         stakes[msg.sender].push(_stake);
 
@@ -238,7 +237,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             uint40(block.timestamp),
             _stake.term,
             _stake.fenix,
-            _stake.bonus,
             _stake.shares,
             payout
         );
@@ -276,7 +274,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             _stake.deferralTs,
             _stake.term,
             _stake.fenix,
-            _stake.bonus,
             _stake.shares,
             _stake.payout
         );
