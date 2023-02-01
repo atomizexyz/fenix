@@ -35,7 +35,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test fenix minted event is emitted
-    function test_fenixMinted_Event() public {
+    function testFenixMintedEvent() public {
         vm.expectEmit(true, true, false, false);
         emit FenixEvent.FenixMinted(address(bob), 10_000000000000000000);
 
@@ -44,7 +44,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test that the start stake event is emitted
-    function test_StartStake_Event() public {
+    function testStartStakeEvent() public {
         Stake memory verifyStake = Stake(
             Status.ACTIVE,
             1,
@@ -66,7 +66,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test that the defer stake event is emitted
-    function test_deferStake_Event() public {
+    function testDeferStakeEvent() public {
         uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyDeferral = Stake(
@@ -92,7 +92,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test that the end stake event is emitted
-    function test_endStake_Event() public {
+    function testEndStakeEvent() public {
         uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyEnd = Stake(
@@ -120,7 +120,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test flush reward pool event is emitted
-    function test_flushRewardPool_Event() public {
+    function testFlushRewardPoolEvent() public {
         uint40 blockTs = uint40(block.timestamp);
 
         vm.warp(blockTs + (86_400 * 180) + 1);

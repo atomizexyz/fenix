@@ -22,7 +22,7 @@ contract AdoptionRewardTest is Test {
 
     address[] internal stakers;
 
-    uint256 tenKXen = 100_000e18;
+    uint256 internal tenKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -45,12 +45,12 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function test_referralReward() public {
+    function testReferralReward() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
     }
 
     /// @notice Test that referral can be flushed to the stake pool
-    function test_referralRewardToStakePool() public {
+    function testReferralRewardToStakePool() public {
         uint256 skipWeeks = 3;
         uint256 startSupply = fenix.stakePoolSupply();
 
@@ -65,7 +65,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward accumulating more referrals
-    function test_referralRewardAccumulatesMore() public {
+    function testReferralRewardAccumulatesMore() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
 
         helper.dealXENTo(stakers, tenKXen, xenCrypto);
@@ -75,7 +75,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward skipping a cooldown
-    function test_referralRewardSkipCooldown() public {
+    function testReferralRewardSkipCooldown() public {
         uint256 skipWeeks = 30;
         uint256 startSupply = fenix.stakePoolSupply();
 
@@ -90,7 +90,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward reverting if you try to claim too early
-    function test_referralReward_RevertIf_TooEarly() public {
+    function testReferralRewardRevertIfTooEarly() public {
         vm.warp(block.timestamp + 86_400);
 
         vm.expectRevert(FenixError.CooldownActive.selector); // verify
@@ -98,7 +98,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward reverting if you try and claim more than once
-    function test_referralReward_RevertIf_AlreadyClaimed() public {
+    function testReferralRewardRevertIfAlreadyClaimed() public {
         uint256 skipWeeks = 3;
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
