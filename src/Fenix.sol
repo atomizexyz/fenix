@@ -67,9 +67,9 @@ library FenixEvent {
     /// @param _stake the stake object
     event EndStake(Stake indexed _stake);
 
-    /// @notice Big bonus has been claimed
-    /// @dev Emit hyperinflation event based on XEN suppply
-    event ClaimBigBonus();
+    /// @notice Reward Pool has been flushed
+    /// @dev Flushed reward pool into staker pool
+    event RewardPoolFlush();
 }
 
 ///----------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ library FenixError {
     error TermGreaterThanMax();
     error StakeNotStarted();
     error StakeNotEnded();
-    error BonusNotActive();
+    error CooldownActive();
     error StakeStatusAlreadySet(Status status);
 }
 
@@ -119,16 +119,16 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     ///----------------------------------------------------------------------------------------------------------------
 
     uint40 public immutable startTs;
-    uint256 public bigBonusUnlockTs;
-    uint256 public bigBonusPoolSupply = 0;
+    uint256 public cooldownUnlockTs;
+    uint256 public rewardPoolSupply = 0;
 
     uint256 public shareRate = 1e18;
 
     uint256 public maxInflationEndTs = 0;
 
-    uint256 public poolSupply = 1;
-    uint256 public poolTotalShares = 0;
-    uint256 public poolTotalStakes = 0;
+    uint256 public stakePoolSupply = 1;
+    uint256 public stakePoolTotalShares = 0;
+    uint256 public stakePoolStakeCount = 0;
 
     uint256 public currentStakeId = 0;
 
@@ -140,7 +140,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = uint40(block.timestamp);
-        bigBonusUnlockTs = uint40(block.timestamp + BIG_BONUS_COOLDOWN - BIG_BONUS_LAUNCH_OFFSET);
+        cooldownUnlockTs = uint40(block.timestamp + BIG_BONUS_COOLDOWN - BIG_BONUS_LAUNCH_OFFSET);
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -159,7 +159,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (user == address(0)) revert FenixError.AddressZero();
         if (amount == 0) revert FenixError.BalanceZero();
         uint256 fenix = amount / XEN_RATIO;
-        bigBonusPoolSupply += fenix;
+        rewardPoolSupply += fenix;
         _mint(user, fenix);
         emit FenixEvent.FenixMinted(user, fenix);
     }
@@ -201,14 +201,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (endTs > maxInflationEndTs) {
             UD60x18 root = toUD60x18(1).add(ud(ANNUAL_INFLATION_RATE));
             UD60x18 exponent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
-            UD60x18 newPoolSupply = toUD60x18(poolSupply).mul(root.pow(exponent));
-            poolSupply = fromUD60x18(newPoolSupply) + fenix;
+            UD60x18 newPoolSupply = toUD60x18(stakePoolSupply).mul(root.pow(exponent));
+            stakePoolSupply = fromUD60x18(newPoolSupply) + fenix;
             maxInflationEndTs = endTs;
         }
 
-        poolTotalShares += shares;
+        stakePoolTotalShares += shares;
 
-        ++poolTotalStakes;
+        ++stakePoolStakeCount;
         ++currentStakeId;
 
         _burn(msg.sender, fenix);
@@ -223,15 +223,15 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (stakes[stakerAddress].length <= stakeIndex) revert FenixError.StakeNotStarted();
         Stake memory _stake = stakes[stakerAddress][stakeIndex];
 
-        if (_stake.status == Status.DEFER || _stake.status == Status.END) return;
+        if (_stake.status != Status.ACTIVE) return;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
         uint256 payout = 0;
 
         if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
 
         UD60x18 stakeShares = toUD60x18(_stake.shares);
-        UD60x18 poolEquity = stakeShares.div(toUD60x18(poolTotalShares));
-        UD60x18 equitySupply = toUD60x18(poolSupply).mul(poolEquity);
+        UD60x18 poolEquity = stakeShares.div(toUD60x18(stakePoolTotalShares));
+        UD60x18 equitySupply = toUD60x18(stakePoolSupply).mul(poolEquity);
 
         UD60x18 penalty = toUD60x18(1);
         if (block.timestamp > endTs) {
@@ -242,7 +242,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
 
-        stakes[stakerAddress][stakeIndex] = Stake(
+        Stake memory deferredStake = Stake(
             Status.DEFER,
             _stake.startTs,
             uint40(block.timestamp),
@@ -254,11 +254,13 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             payout
         );
 
-        poolTotalShares -= fromUD60x18(stakeShares);
-        poolSupply -= payout;
+        stakes[stakerAddress][stakeIndex] = deferredStake;
+        stakePoolTotalShares -= fromUD60x18(stakeShares);
+        stakePoolSupply -= payout;
 
-        --poolTotalStakes;
-        emit FenixEvent.DeferStake(_stake);
+        --stakePoolStakeCount;
+
+        emit FenixEvent.DeferStake(deferredStake);
     }
 
     /// @notice End a stake
@@ -355,13 +357,13 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return unwrap(penalty);
     }
 
-    function claimAdoptoinBonus() public {
-        if (block.timestamp < bigBonusUnlockTs) revert FenixError.BonusNotActive();
-        uint256 cooldownPeriods = (block.timestamp - bigBonusUnlockTs) / BIG_BONUS_COOLDOWN;
-        poolSupply += bigBonusPoolSupply;
-        bigBonusPoolSupply = 0;
-        bigBonusUnlockTs = bigBonusUnlockTs + uint40(BIG_BONUS_COOLDOWN + (cooldownPeriods * BIG_BONUS_COOLDOWN));
-        emit FenixEvent.ClaimBigBonus();
+    function flushRewardPool() public {
+        if (block.timestamp < cooldownUnlockTs) revert FenixError.CooldownActive();
+        uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / BIG_BONUS_COOLDOWN;
+        stakePoolSupply += rewardPoolSupply;
+        cooldownUnlockTs += uint40(BIG_BONUS_COOLDOWN + (cooldownPeriods * BIG_BONUS_COOLDOWN));
+        rewardPoolSupply = 0;
+        emit FenixEvent.RewardPoolFlush();
     }
 
     /// @notice Get stake for address at index

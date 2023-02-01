@@ -13,10 +13,12 @@ contract FenixStakeTest is Test {
     XENCrypto internal xenCrypto;
 
     address internal bob = address(this);
-    address internal chad = vm.addr(1);
+    address internal alice = vm.addr(1);
+    address internal chad = vm.addr(2);
 
     address[] internal stakers;
     uint256 internal term = 100;
+    uint256 internal tenKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -30,8 +32,7 @@ contract FenixStakeTest is Test {
 
         stakers.push(bob);
 
-        uint256 tenKXen = 100_000e18;
-        deal({ token: address(xenCrypto), to: bob, give: tenKXen });
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -117,7 +118,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.poolSupply(), 9_375000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 9_375000000000000001); // verify
     }
 
     /// @notice Test deferring a stake from the owner
@@ -133,7 +134,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.poolSupply(), 1_250000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 1_250000000000000001); // verify
     }
 
     /// @notice Test deferring a stake from the owner
@@ -150,7 +151,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.poolSupply(), 1_250000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 1_250000000000000001); // verify
     }
 
     /// @notice test defer stake early and revert if not owner
@@ -190,7 +191,7 @@ contract FenixStakeTest is Test {
 
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.END); // verify
-        assertEq(fenix.poolSupply(), 0); // verify
+        assertEq(fenix.stakePoolSupply(), 0); // verify
     }
 
     /// @notice test defer then end stake
@@ -209,7 +210,7 @@ contract FenixStakeTest is Test {
 
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.END); // verify
-        assertEq(fenix.poolSupply(), 0); // verify
+        assertEq(fenix.stakePoolSupply(), 0); // verify
     }
 
     /// @notice test end stake and revert if not owner

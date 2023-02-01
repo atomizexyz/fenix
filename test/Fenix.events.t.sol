@@ -16,6 +16,9 @@ contract FenixTest is Test {
 
     address[] internal stakers;
 
+    uint256 internal term = 100;
+    uint256 internal tenKXen = 100_000e18;
+
     /// ============ Setup test suite ============
 
     function setUp() public {
@@ -23,33 +26,34 @@ contract FenixTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
-        stakers.push(bob);
-        helper.generateXENFor(stakers, xenCrypto);
         fenix = new Fenix();
+
+        stakers.push(bob);
+
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
     /// @notice Test fenix minted event is emitted
-    function testFenixMintedEvnet() public {
+    function test_fenixMinted_Event() public {
         vm.expectEmit(true, true, false, false);
-        emit FenixEvent.FenixMinted(address(bob), 330000000000000000);
+        emit FenixEvent.FenixMinted(address(bob), 10_000000000000000000);
 
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
     /// @notice Test that the start stake event is emitted
-    function testStartStakeEvnet() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-
-        uint256 baseTerm = 100;
+    function test_StartStake_Event() public {
         Stake memory verifyStake = Stake(
             Status.ACTIVE,
-            86402,
+            1,
             0,
             0,
-            baseTerm,
-            330000000000000000,
-            379902501829349467,
-            379902501829349467,
+            term,
+            10_000000000000000000,
+            11_512197025131802050,
+            11_512197025131802050,
             0
         );
 
@@ -58,87 +62,72 @@ contract FenixTest is Test {
         vm.expectEmit(true, false, false, false);
         emit FenixEvent.StartStake(verifyStake);
 
-        vm.prank(bob);
-        fenix.startStake(bobFenixBalance, baseTerm);
+        fenix.startStake(bobFenixBalance, term);
     }
 
     /// @notice Test that the defer stake event is emitted
-    function testDeferStakeEvnet() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-
-        uint256 baseTerm = 100;
+    function test_deferStake_Event() public {
         uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyDeferral = Stake(
             Status.DEFER,
-            86402,
-            8726402,
+            1,
+            8640001,
             0,
-            baseTerm,
-            330000000000000000,
-            379902501829349467,
-            379902501829349467,
-            330000000000000001
+            term,
+            10_000000000000000000,
+            11_512197025131802050,
+            11_512197025131802050,
+            10_000000000000000001
         );
 
-        uint256 bobFenixBalance = fenix.balanceOf(bob);
+        fenix.startStake(fenix.balanceOf(bob), term);
 
-        vm.prank(bob);
-        fenix.startStake(bobFenixBalance, baseTerm);
-
-        vm.warp(blockTs + (86_400 * baseTerm));
+        vm.warp(blockTs + (86_400 * term));
 
         vm.expectEmit(true, false, false, false);
         emit FenixEvent.DeferStake(verifyDeferral);
 
-        vm.prank(bob);
         fenix.deferStake(0, bob);
     }
 
     /// @notice Test that the end stake event is emitted
-    function testEndStakeEvnet() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-
-        uint256 baseTerm = 100;
+    function test_endStake_Event() public {
         uint40 blockTs = uint40(block.timestamp);
 
         Stake memory verifyEnd = Stake(
             Status.END,
-            86402,
-            8726402,
+            1,
+            8640001,
             0,
-            baseTerm,
-            330000000000000000,
-            379902501829349467,
-            379902501829349467,
-            330000000000000001
+            term,
+            10_000000000000000000,
+            11_512197025131802050,
+            11_512197025131802050,
+            10_000000000000000001
         );
 
         uint256 bobFenixBalance = fenix.balanceOf(bob);
 
-        vm.prank(bob);
-        fenix.startStake(bobFenixBalance, baseTerm);
+        fenix.startStake(bobFenixBalance, term);
 
-        vm.warp(blockTs + (86_400 * baseTerm));
+        vm.warp(blockTs + (86_400 * term));
 
         vm.expectEmit(true, false, false, false);
         emit FenixEvent.EndStake(verifyEnd);
 
-        vm.prank(bob);
         fenix.endStake(0);
     }
 
-    /// @notice Test big bonus event is emitted
-    function testClaimBigBonusEvent() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-
+    /// @notice Test flush reward pool event is emitted
+    function test_flushRewardPool_Event() public {
         uint40 blockTs = uint40(block.timestamp);
 
         vm.warp(blockTs + (86_400 * 180) + 1);
 
         vm.expectEmit(false, false, false, false);
-        emit FenixEvent.ClaimBigBonus();
+        emit FenixEvent.RewardPoolFlush();
 
-        fenix.claimBigBonus();
+        fenix.flushRewardPool();
     }
 }

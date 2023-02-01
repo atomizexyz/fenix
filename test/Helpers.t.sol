@@ -23,6 +23,13 @@ contract HelpersTest is Test {
         }
     }
 
+    function dealXENTo(address[] memory users, uint256 amount, XENCrypto xenCrypto) public {
+        for (uint256 i = 0; i < users.length; i++) {
+            address userAddress = address(users[i]);
+            deal({ token: address(xenCrypto), to: userAddress, give: amount });
+        }
+    }
+
     function generateXENFor(address[] memory users, XENCrypto xenCrypto) public {
         uint256 timestamp = block.timestamp;
 

@@ -46,7 +46,7 @@ contract FenixShareTest is Test {
 
         assertGt(fenix.shareRate(), 1e18); // verify
         assertEq(fenix.shareRate(), 1_000000000000000006); // verify
-        assertEq(fenix.poolSupply(), 0); // verify
+        assertEq(fenix.stakePoolSupply(), 0); // verify
     }
 
     /// @notice Test that the contract can be deployed successfully
@@ -99,6 +99,6 @@ contract FenixShareTest is Test {
         uint256 aliceFinalBalance = fenix.balanceOf(alice);
 
         assertGt(aliceFinalBalance, bobFinalBalance); // verify
-        assertEq(fenix.poolSupply(), 0); // verify
+        assertEq(fenix.stakePoolSupply(), 0); // verify
     }
 }
