@@ -41,7 +41,6 @@ contract FenixStakeTest is Test {
         fenix.startStake(fenix.balanceOf(bob), term);
 
         Stake memory stake0 = fenix.stakeFor(bob, 0);
-        assertEq(stake0.stakeId, 0); // verify
         assertTrue(stake0.status == Status.ACTIVE); // verify
     }
 
@@ -54,15 +53,12 @@ contract FenixStakeTest is Test {
         fenix.startStake(fenixBalanceThird, term);
 
         Stake memory stake0 = fenix.stakeFor(bob, 0);
-        assertEq(stake0.stakeId, 0); // verify
         assertTrue(stake0.status == Status.ACTIVE); // verify
 
         Stake memory stake1 = fenix.stakeFor(bob, 1);
-        assertEq(stake1.stakeId, 1); // verify
         assertTrue(stake1.status == Status.ACTIVE); // verify
 
         Stake memory stake2 = fenix.stakeFor(bob, 2);
-        assertEq(stake2.stakeId, 2); // verify
         assertTrue(stake2.status == Status.ACTIVE); // verify
     }
 

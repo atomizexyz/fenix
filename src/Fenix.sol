@@ -35,7 +35,6 @@ struct Stake {
     uint40 startTs;
     uint40 deferralTs;
     uint16 term;
-    uint256 stakeId;
     uint256 fenix;
     uint256 bonus;
     uint256 shares;
@@ -135,8 +134,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public stakePoolTotalShares = 0;
     uint256 public stakePoolStakeCount = 0;
 
-    uint256 public currentStakeId = 0;
-
     mapping(address => Stake[]) public stakes;
 
     ///----------------------------------------------------------------------------------------------------------------
@@ -188,17 +185,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         // Convert effective FENIX bonus to shares
         uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
-        Stake memory _stake = Stake(
-            Status.ACTIVE,
-            uint40(block.timestamp),
-            0,
-            uint16(term),
-            currentStakeId,
-            fenix,
-            bonus,
-            shares,
-            0
-        );
+        Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, bonus, shares, 0);
 
         stakes[msg.sender].push(_stake);
 
@@ -214,7 +201,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         stakePoolTotalShares += shares;
 
         ++stakePoolStakeCount;
-        ++currentStakeId;
 
         _burn(msg.sender, fenix);
         emit FenixEvent.StartStake(_stake);
@@ -251,7 +237,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             _stake.startTs,
             uint40(block.timestamp),
             _stake.term,
-            _stake.stakeId,
             _stake.fenix,
             _stake.bonus,
             _stake.shares,
@@ -290,7 +275,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             _stake.startTs,
             _stake.deferralTs,
             _stake.term,
-            _stake.stakeId,
             _stake.fenix,
             _stake.bonus,
             _stake.shares,
