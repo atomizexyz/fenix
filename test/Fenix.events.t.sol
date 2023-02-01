@@ -37,7 +37,7 @@ contract FenixTest is Test {
     /// @notice Test fenix minted event is emitted
     function testFenixMintedEvent() public {
         vm.expectEmit(true, true, false, false);
-        emit FenixEvent.FenixMinted(address(bob), 10_000000000000000000);
+        emit FenixEvent.MintFenix(address(bob), 10_000000000000000000);
 
         helper.dealXENTo(stakers, tenKXen, xenCrypto);
         helper.getFenixFor(stakers, fenix, xenCrypto);
@@ -122,7 +122,7 @@ contract FenixTest is Test {
         vm.warp(blockTs + (86_400 * 180) + 1);
 
         vm.expectEmit(false, false, false, false);
-        emit FenixEvent.RewardPoolFlush();
+        emit FenixEvent.FlushRewardPool();
 
         fenix.flushRewardPool();
     }

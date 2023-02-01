@@ -50,7 +50,7 @@ library FenixEvent {
     /// @dev XEN proof of burn smart contract burns XEN tokens and mints FENIX tokens
     /// @param _userAddress the address of the staker to mint FENIX tokens for
     /// @param _amount the amount of FENIX tokens to mint
-    event FenixMinted(address indexed _userAddress, uint256 indexed _amount);
+    event MintFenix(address indexed _userAddress, uint256 indexed _amount);
 
     /// @notice Stake has been started
     /// @dev Size and Time bonus have been calculated to burn FENIX in exchnge for equity to start stake
@@ -69,7 +69,7 @@ library FenixEvent {
 
     /// @notice Reward Pool has been flushed
     /// @dev Flushed reward pool into staker pool
-    event RewardPoolFlush();
+    event FlushRewardPool();
 
     /// @notice Share rate has been updated
     /// @dev Share rate has been updated
@@ -166,7 +166,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 fenix = amount / XEN_RATIO;
         rewardPoolSupply += fenix;
         _mint(user, fenix);
-        emit FenixEvent.FenixMinted(user, fenix);
+        emit FenixEvent.MintFenix(user, fenix);
     }
 
     /// @notice Burn XEN tokens
@@ -368,7 +368,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         stakePoolSupply += rewardPoolSupply;
         cooldownUnlockTs += uint40(BIG_BONUS_COOLDOWN + (cooldownPeriods * BIG_BONUS_COOLDOWN));
         rewardPoolSupply = 0;
-        emit FenixEvent.RewardPoolFlush();
+        emit FenixEvent.FlushRewardPool();
     }
 
     /// @notice Get stake for address at index
