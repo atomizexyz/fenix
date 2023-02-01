@@ -33,6 +33,7 @@
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
     "prettier:check": "prettier --check \"**/*.{json,md,sol,yml}\"",
-    "prettier:write": "prettier --write \"**/*.{json,md,sol,yml}\""
+    "prettier:write": "prettier --write \"**/*.{json,md,sol,yml}\"",
+    "prepare": "husky install"
   }
 }

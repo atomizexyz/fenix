@@ -34,8 +34,8 @@ struct Stake {
     Status status;
     uint40 startTs;
     uint40 deferralTs;
+    uint16 term;
     uint256 stakeId;
-    uint256 term;
     uint256 fenix;
     uint256 bonus;
     uint256 shares;
@@ -192,8 +192,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             Status.ACTIVE,
             uint40(block.timestamp),
             0,
+            uint16(term),
             currentStakeId,
-            term,
             fenix,
             bonus,
             shares,
@@ -250,8 +250,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             Status.DEFER,
             _stake.startTs,
             uint40(block.timestamp),
-            _stake.stakeId,
             _stake.term,
+            _stake.stakeId,
             _stake.fenix,
             _stake.bonus,
             _stake.shares,
@@ -289,8 +289,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             Status.END,
             _stake.startTs,
             _stake.deferralTs,
-            _stake.stakeId,
             _stake.term,
+            _stake.stakeId,
             _stake.fenix,
             _stake.bonus,
             _stake.shares,
