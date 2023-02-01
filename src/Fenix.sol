@@ -70,6 +70,11 @@ library FenixEvent {
     /// @notice Reward Pool has been flushed
     /// @dev Flushed reward pool into staker pool
     event RewardPoolFlush();
+
+    /// @notice Share rate has been updated
+    /// @dev Share rate has been updated
+    /// @param _shareRate the new share rate
+    event UpdateShareRate(uint256 indexed _shareRate);
 }
 
 ///----------------------------------------------------------------------------------------------------------------
@@ -225,7 +230,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         if (_stake.status != Status.ACTIVE) return;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
-        uint256 payout = 0;
 
         if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
 
@@ -240,7 +244,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             penalty = ud(calculateEarlyPenalty(_stake));
         }
 
-        payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
+        uint256 payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
 
         Stake memory deferredStake = Stake(
             Status.DEFER,
@@ -278,6 +282,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
+            emit FenixEvent.UpdateShareRate(shareRate);
         }
 
         Stake memory endedStake = Stake(

@@ -12,20 +12,14 @@ contract BonusTest is Test {
     Fenix internal fenix;
     XENCrypto internal xenCrypto;
 
-    address internal bob = address(this);
-
-    address[] internal stakers;
-
     /// ============ Setup test suite ============
 
     function setUp() public {
         helper = new HelpersTest();
+
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
-        stakers.push(bob);
-
-        helper.generateXENFor(stakers, xenCrypto);
         fenix = new Fenix();
     }
 
@@ -46,21 +40,26 @@ contract BonusTest is Test {
 
     /// @notice Test calculating size bonus
     function testCalculateSizeBonus() public {
+        uint256 burn0ASH = 0;
+        assertEq(fenix.calculateSizeBonus(burn0ASH), 0); // verify
+
         uint256 burn1ASH = 1;
-        uint256 sizeBonus1FENIX = fenix.calculateSizeBonus(burn1ASH);
-        assertEq(sizeBonus1FENIX, 0); // verify
+        assertEq(fenix.calculateSizeBonus(burn1ASH), 0); // verify
 
         uint256 burn2FENIX = 2 * 1e18;
-        uint256 sizeBonus2FENIX = fenix.calculateSizeBonus(burn2FENIX);
-        assertEq(sizeBonus2FENIX, 200000000000000000); // verify
+        assertEq(fenix.calculateSizeBonus(burn2FENIX), 200000000000000000); // verify
 
         uint256 burn3FENIX = 3 * 1e18;
-        uint256 sizeBonus3FENIX = fenix.calculateSizeBonus(burn3FENIX);
-        assertEq(sizeBonus3FENIX, 300000000000000000); // verify
+        assertEq(fenix.calculateSizeBonus(burn3FENIX), 300000000000000000); // verify
 
         uint256 burnTrillionFENIX = 1_000_000_000_000 * 1e18;
-        uint256 sizeBonus4FENIX = fenix.calculateSizeBonus(burnTrillionFENIX);
-        assertEq(sizeBonus4FENIX, 100000000000_000000000000000000); // verify
+        assertEq(fenix.calculateSizeBonus(burnTrillionFENIX), 100000000000 * 1e18); // verify
+
+        uint256 burnUINTMax = UINT256_MAX;
+        assertEq(
+            fenix.calculateSizeBonus(burnUINTMax),
+            11579208923731619542357098500868790785326998466564056403945758400791312963993
+        ); // verify
     }
 
     /// @notice Test calculating time bonus
@@ -79,8 +78,8 @@ contract BonusTest is Test {
         uint256 tenYearBonus = fenix.calculateTimeBonus(base, tenYearTerm);
         assertEq(tenYearBonus, 619_173642239999950200); // verify
 
-        uint256 fiftyYearTerm = 365 * 50;
+        uint256 fiftyYearTerm = 365 * 55;
         uint256 fiftyYearBonus = fenix.calculateTimeBonus(base, fiftyYearTerm);
-        assertEq(fiftyYearBonus, 910043_815000214611982800); // verify
+        assertEq(fiftyYearBonus, 2264480_225741333932466600); // verify
     }
 }

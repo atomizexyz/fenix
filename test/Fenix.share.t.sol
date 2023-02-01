@@ -16,6 +16,7 @@ contract FenixShareTest is Test {
     address internal alice = vm.addr(1);
 
     address[] internal stakers;
+    uint256 internal tenKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -24,34 +25,31 @@ contract FenixShareTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
+        fenix = new Fenix();
+
         stakers.push(bob);
         stakers.push(alice);
 
-        helper.generateXENFor(stakers, xenCrypto);
-        fenix = new Fenix();
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
     /// @notice Test that the contract can be deployed successfully
     function testShareRateUpdate() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-        uint256 term = 365;
+        uint256 term = 3650;
 
-        uint256 fenixBalance = fenix.balanceOf(bob);
-        vm.prank(bob);
-        fenix.startStake(fenixBalance, term);
+        fenix.startStake(fenix.balanceOf(bob), term);
 
         vm.warp(block.timestamp + (86_400 * term));
-        vm.prank(bob);
         fenix.endStake(0);
 
         assertGt(fenix.shareRate(), 1e18); // verify
-        assertEq(fenix.shareRate(), 1_000000000000000006); // verify
+        assertEq(fenix.shareRate(), 1_000000000000001512); // verify
         assertEq(fenix.stakePoolSupply(), 0); // verify
     }
 
     /// @notice Test that the contract can be deployed successfully
     function testShortVsLongShareUpdate() public {
-        helper.getFenixFor(stakers, fenix, xenCrypto);
         uint256 launchTerm = 1;
         uint256 shortTerm = 1;
         uint256 longTerm = 10;

@@ -30,22 +30,6 @@ contract HelpersTest is Test {
         }
     }
 
-    function generateXENFor(address[] memory users, XENCrypto xenCrypto) public {
-        uint256 timestamp = block.timestamp;
-
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            xenCrypto.claimRank(1);
-        }
-
-        vm.warp(timestamp + (86400 * 1) + 1);
-
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            xenCrypto.claimMintReward();
-        }
-    }
-
     function printStake(Stake memory stake) public view {
         console.log("status: ", uint8(stake.status));
         console.log("startTs: ", stake.startTs);

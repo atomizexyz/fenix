@@ -15,6 +15,7 @@ contract FenixPenaltyTest is Test {
     address internal bob = address(this);
 
     address[] internal stakers;
+    uint256 internal tenKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -23,10 +24,12 @@ contract FenixPenaltyTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
+        fenix = new Fenix();
+
         stakers.push(bob);
 
-        helper.generateXENFor(stakers, xenCrypto);
-        fenix = new Fenix();
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
     /// @notice Test stake penality

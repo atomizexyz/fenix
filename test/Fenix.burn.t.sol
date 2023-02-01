@@ -15,6 +15,7 @@ contract FenixBurnTest is Test {
     address internal bob = address(this);
 
     address[] internal stakers;
+    uint256 internal tenKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -23,10 +24,11 @@ contract FenixBurnTest is Test {
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
 
+        fenix = new Fenix();
+
         stakers.push(bob);
 
-        helper.generateXENFor(stakers, xenCrypto);
-        fenix = new Fenix();
+        helper.dealXENTo(stakers, tenKXen, xenCrypto);
     }
 
     /// @notice Test that the contract can be deployed successfully
@@ -34,7 +36,7 @@ contract FenixBurnTest is Test {
         address fenixAddr = address(fenix);
         uint256 balancePreBurn = xenCrypto.balanceOf(bob);
 
-        assertEq(balancePreBurn, 3300 * 1e18);
+        assertEq(balancePreBurn, 100000 * 1e18);
 
         xenCrypto.approve(fenixAddr, balancePreBurn);
 
@@ -44,6 +46,6 @@ contract FenixBurnTest is Test {
         uint256 balancePostBurnFENIX = fenix.balanceOf(bob);
 
         assertEq(balancePostBurnXEN, 0);
-        assertEq(balancePostBurnFENIX, 3300 * 1e14);
+        assertEq(balancePostBurnFENIX, 10 * 1e18);
     }
 }

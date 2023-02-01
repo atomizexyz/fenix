@@ -57,12 +57,10 @@ contract FenixTest is Test {
             0
         );
 
-        uint256 bobFenixBalance = fenix.balanceOf(bob);
-
         vm.expectEmit(true, false, false, false);
         emit FenixEvent.StartStake(verifyStake);
 
-        fenix.startStake(bobFenixBalance, term);
+        fenix.startStake(fenix.balanceOf(bob), term);
     }
 
     /// @notice Test that the defer stake event is emitted
@@ -107,9 +105,7 @@ contract FenixTest is Test {
             10_000000000000000001
         );
 
-        uint256 bobFenixBalance = fenix.balanceOf(bob);
-
-        fenix.startStake(bobFenixBalance, term);
+        fenix.startStake(fenix.balanceOf(bob), term);
 
         vm.warp(blockTs + (86_400 * term));
 
@@ -129,5 +125,20 @@ contract FenixTest is Test {
         emit FenixEvent.RewardPoolFlush();
 
         fenix.flushRewardPool();
+    }
+
+    /// @notice Test share rate update event
+    function testUpdateShareRateEvent() public {
+        uint40 blockTs = uint40(block.timestamp);
+        uint256 oneYearTerm = 3650;
+
+        fenix.startStake(fenix.balanceOf(bob), oneYearTerm);
+
+        vm.warp(blockTs + (86_400 * oneYearTerm));
+
+        vm.expectEmit(true, false, false, false);
+        emit FenixEvent.UpdateShareRate(1_000000000000001512);
+
+        fenix.endStake(0);
     }
 }
