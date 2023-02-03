@@ -17,7 +17,7 @@ pragma solidity ^0.8.13;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, wrap, unwrap, ud, E, ZERO, sub } from "@prb/math/UD60x18.sol";
+import { UD60x18, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
@@ -102,11 +102,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
     // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
-    uint256 public constant ANNUAL_INFLATION_RATE = 1_618033988749894848;
-
     uint256 public constant XEN_RATIO = 10_000;
-    uint256 public constant EARLY_PENALTY_EXPONENT = 2;
-    uint256 public constant LATE_PENALTY_EXPONENT = 3;
 
     uint256 public constant TIME_BONUS = 1_820;
     uint256 public constant MAX_STAKE_LENGTH_DAYS = 20_075; // 365 * 55 (55 years)
@@ -116,6 +112,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 internal constant REWARD_COOLDOWN_TS = 7_862_400; // 86_400 * 7 * 13  (13 weeks)
     uint256 internal constant REWARD_LAUNCH_COOLDOWN_TS = 1_814_400; // 86_400 * 7 * 3 (3 weeks)
 
+    UD60x18 public constant ANNUAL_INFLATION_RATE = UD60x18.wrap(1_618033988749894848);
     UD60x18 internal constant ONE = UD60x18.wrap(1e18);
     UD60x18 internal constant TEN_PERCENT = UD60x18.wrap(0.1e18);
     UD60x18 internal constant NINETY_PERCENT = UD60x18.wrap(0.9e18);
@@ -194,7 +191,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         uint256 endTs = block.timestamp + term;
         if (endTs > maxInflationEndTs) {
-            UD60x18 root = ONE.add(ud(ANNUAL_INFLATION_RATE));
+            UD60x18 root = ONE.add(ANNUAL_INFLATION_RATE);
             UD60x18 exponent = ud(term).div(ONE_YEAR_DAYS);
             UD60x18 newPoolSupply = ud(stakePoolSupply).mul(root.pow(exponent));
             stakePoolSupply = unwrap(newPoolSupply) + fenix;
@@ -220,16 +217,17 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
 
-        uint256 rewardPercent = 0;
+        UD60x18 rewardPercent = ZERO;
         if (block.timestamp > endTs) {
-            rewardPercent = calculateLatePayout(_stake);
+            rewardPercent = ud(calculateLatePayout(_stake));
         } else {
-            rewardPercent = calculateEarlyPayout(_stake);
+            rewardPercent = ud(calculateEarlyPayout(_stake));
         }
 
-        UD60x18 poolSharePercent = ud(_stake.shares).div(ud(stakePoolTotalShares));
-        UD60x18 stakerPoolShares = ud(_stake.shares).mul(ud(rewardPercent));
-        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(poolSharePercent).mul(ud(rewardPercent)));
+        UD60x18 stakeShares = ud(_stake.shares);
+        UD60x18 poolSharePercent = stakeShares.div(ud(stakePoolTotalShares));
+        UD60x18 stakerPoolShares = stakeShares.mul(rewardPercent);
+        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(poolSharePercent).mul(rewardPercent));
 
         Stake memory deferredStake = Stake(
             Status.DEFER,
@@ -292,6 +290,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (ud(fenix).gte(ONE)) {
             sizeBonus = ONE.sub(ud(fenix).inv());
         }
+
         UD60x18 timeBonus = ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)).powu(2);
         UD60x18 bonus = ud(fenix).mul(E.pow(sizeBonus.mul(TEN_PERCENT).add(timeBonus.mul(NINETY_PERCENT))));
         return unwrap(bonus);
@@ -304,7 +303,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
         if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
         uint256 currentTerm = (block.timestamp - stake.startTs) / ONE_DAY_TS;
-        UD60x18 reward = ud(currentTerm).div(ud(stake.term)).powu(EARLY_PENALTY_EXPONENT);
+        UD60x18 reward = ud(currentTerm).div(ud(stake.term)).powu(2);
         return unwrap(reward);
     }
 
@@ -321,7 +320,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         if (lateTs > ONE_EIGHTY_DAYS_TS) return 0;
 
-        UD60x18 penalty = ud(lateTs).div(ud(ONE_EIGHTY_DAYS_TS)).powu(LATE_PENALTY_EXPONENT);
+        UD60x18 penalty = ud(lateTs).div(ud(ONE_EIGHTY_DAYS_TS)).powu(3);
         UD60x18 reward = ONE.sub(penalty);
         return unwrap(reward);
     }
