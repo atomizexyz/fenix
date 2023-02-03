@@ -114,7 +114,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.stakePoolSupply(), 9_375000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 7_500000000000000001); // verify
     }
 
     /// @notice Test deferring a stake from the owner

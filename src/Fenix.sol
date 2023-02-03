@@ -17,7 +17,7 @@ pragma solidity ^0.8.13;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, toUD60x18, fromUD60x18, wrap, unwrap, ud } from "@prb/math/UD60x18.sol";
+import { UD60x18, wrap, unwrap, ud, E, ZERO, sub } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
@@ -103,19 +103,23 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 public constant ANNUAL_INFLATION_RATE = 1_618033988749894848;
-    uint256 public constant SIZE_BONUS_RATE = 0.10e18;
-    uint256 public constant TIME_BONUS_RATE = 0.20e18;
+
+    uint256 public constant XEN_RATIO = 10_000;
     uint256 public constant EARLY_PENALTY_EXPONENT = 2;
     uint256 public constant LATE_PENALTY_EXPONENT = 3;
 
-    uint256 public constant ONE_DAY_SECONDS = 86_400;
-    uint256 public constant ONE_EIGHTY_DAYS = 180;
-    uint256 public constant ONE_YEAR_DAYS = 365;
     uint256 public constant TIME_BONUS = 1_820;
-    uint256 public constant MAX_STAKE_LENGTH_DAYS = 365 * 55; // 55 years
-    uint256 public constant XEN_RATIO = 10_000;
-    uint256 public constant REWARD_COOLDOWN = 86_400 * 7 * 13; // 13 weeks
-    uint256 public constant REWARD_LAUNCH_COOLDOWN = 86_400 * 7 * 3; // 10 weeks
+    uint256 public constant MAX_STAKE_LENGTH_DAYS = 20_075; // 365 * 55 (55 years)
+
+    uint256 internal constant ONE_DAY_TS = 86_400; // (1 day)
+    uint256 internal constant ONE_EIGHTY_DAYS_TS = 15_552_000; // 86_400 * 180 (180 days)
+    uint256 internal constant REWARD_COOLDOWN_TS = 7_862_400; // 86_400 * 7 * 13  (13 weeks)
+    uint256 internal constant REWARD_LAUNCH_COOLDOWN_TS = 1_814_400; // 86_400 * 7 * 3 (3 weeks)
+
+    UD60x18 internal constant ONE = UD60x18.wrap(1e18);
+    UD60x18 internal constant TEN_PERCENT = UD60x18.wrap(0.1e18);
+    UD60x18 internal constant NINETY_PERCENT = UD60x18.wrap(0.9e18);
+    UD60x18 internal constant ONE_YEAR_DAYS = UD60x18.wrap(365);
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Variables
@@ -131,7 +135,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     uint256 public stakePoolSupply = 1;
     uint256 public stakePoolTotalShares = 0;
-    uint256 public stakePoolStakeCount = 0;
 
     mapping(address => Stake[]) public stakes;
 
@@ -141,7 +144,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     constructor() ERC20("FENIX", "FENIX", 18) {
         startTs = uint40(block.timestamp);
-        cooldownUnlockTs = block.timestamp + REWARD_LAUNCH_COOLDOWN;
+        cooldownUnlockTs = block.timestamp + REWARD_LAUNCH_COOLDOWN_TS;
     }
 
     /// @notice Evaluate if the contract supports the interface
@@ -159,6 +162,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (msg.sender != XEN_ADDRESS) revert FenixError.WrongCaller(msg.sender);
         if (user == address(0)) revert FenixError.AddressZero();
         if (amount == 0) revert FenixError.BalanceZero();
+
         uint256 fenix = amount / XEN_RATIO;
         rewardPoolSupply += fenix;
         _mint(user, fenix);
@@ -190,16 +194,14 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         uint256 endTs = block.timestamp + term;
         if (endTs > maxInflationEndTs) {
-            UD60x18 root = toUD60x18(1).add(ud(ANNUAL_INFLATION_RATE));
-            UD60x18 exponent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
-            UD60x18 newPoolSupply = toUD60x18(stakePoolSupply).mul(root.pow(exponent));
-            stakePoolSupply = fromUD60x18(newPoolSupply) + fenix;
+            UD60x18 root = ONE.add(ud(ANNUAL_INFLATION_RATE));
+            UD60x18 exponent = ud(term).div(ONE_YEAR_DAYS);
+            UD60x18 newPoolSupply = ud(stakePoolSupply).mul(root.pow(exponent));
+            stakePoolSupply = unwrap(newPoolSupply) + fenix;
             maxInflationEndTs = endTs;
         }
 
         stakePoolTotalShares += shares;
-
-        ++stakePoolStakeCount;
 
         _burn(msg.sender, fenix);
         emit FenixEvent.StartStake(_stake);
@@ -214,22 +216,20 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         Stake memory _stake = stakes[stakerAddress][stakeIndex];
 
         if (_stake.status != Status.ACTIVE) return;
-        uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_SECONDS);
+        uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_TS);
 
         if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
 
-        UD60x18 stakeShares = toUD60x18(_stake.shares);
-        UD60x18 poolEquity = stakeShares.div(toUD60x18(stakePoolTotalShares));
-        UD60x18 equitySupply = toUD60x18(stakePoolSupply).mul(poolEquity);
-
-        UD60x18 penalty = toUD60x18(1);
+        uint256 rewardPercent = 0;
         if (block.timestamp > endTs) {
-            penalty = ud(calculateLatePenalty(_stake));
+            rewardPercent = calculateLatePayout(_stake);
         } else {
-            penalty = ud(calculateEarlyPenalty(_stake));
+            rewardPercent = calculateEarlyPayout(_stake);
         }
 
-        uint256 payout = fromUD60x18(equitySupply.sub(equitySupply.mul(penalty)));
+        UD60x18 poolSharePercent = ud(_stake.shares).div(ud(stakePoolTotalShares));
+        UD60x18 stakerPoolShares = ud(_stake.shares).mul(ud(rewardPercent));
+        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(poolSharePercent).mul(ud(rewardPercent)));
 
         Stake memory deferredStake = Stake(
             Status.DEFER,
@@ -238,14 +238,13 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             _stake.term,
             _stake.fenix,
             _stake.shares,
-            payout
+            stakerSupply
         );
 
         stakes[stakerAddress][stakeIndex] = deferredStake;
-        stakePoolTotalShares -= fromUD60x18(stakeShares);
-        stakePoolSupply -= payout;
+        stakePoolTotalShares -= unwrap(stakerPoolShares);
 
-        --stakePoolStakeCount;
+        stakePoolSupply -= stakerSupply;
 
         emit FenixEvent.DeferStake(deferredStake);
     }
@@ -262,7 +261,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         emit FenixEvent.EndStake(_stake);
         _mint(msg.sender, _stake.payout);
 
-        uint256 returnOnStake = unwrap(toUD60x18(_stake.payout).div(toUD60x18(_stake.fenix)));
+        uint256 returnOnStake = unwrap(ud(_stake.payout).div(ud(_stake.fenix)));
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
             emit FenixEvent.UpdateShareRate(shareRate);
@@ -289,65 +288,49 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the bonus for pool equity stake
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        uint256 sizeBonus = calculateSizeBonus(fenix);
-        uint256 timeBonus = calculateTimeBonus(fenix, term);
-        return sizeBonus + timeBonus;
-    }
-
-    /// @notice Calculate size bonus
-    /// @dev Use fenix amount to calcualte size bonus used for pool equity stake
-    /// @param fenix the amount of fenix used to calculate the equity stake
-    /// @return bonus rate for larger stake size
-    function calculateSizeBonus(uint256 fenix) public pure returns (uint256) {
-        UD60x18 bonus = ud(fenix).mul(ud(SIZE_BONUS_RATE));
+        UD60x18 sizeBonus = ZERO;
+        if (ud(fenix).gte(ONE)) {
+            sizeBonus = ONE.sub(ud(fenix).inv());
+        }
+        UD60x18 timeBonus = ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)).powu(2);
+        UD60x18 bonus = ud(fenix).mul(E.pow(sizeBonus.mul(TEN_PERCENT).add(timeBonus.mul(NINETY_PERCENT))));
         return unwrap(bonus);
-    }
-
-    /// @notice Calculate time bonus
-    /// @dev Use 20% annual compound interest rate formula to calculate the time bonus
-    /// @param fenix the fenix bonus
-    /// @param term the term of the stake in days used to calculate the pool equity stake
-    /// @return bonus rate for longer stake duration
-    function calculateTimeBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        UD60x18 annualCompletionPercent = toUD60x18(term).div(toUD60x18(ONE_YEAR_DAYS));
-        UD60x18 bonus = toUD60x18(fenix).mul(toUD60x18(1).add(ud(TIME_BONUS_RATE)).pow(annualCompletionPercent));
-        return fromUD60x18(bonus);
     }
 
     /// @notice Calcualte the early end stake penalty
     /// @dev Calculates the early end stake penality to be split between the pool and the staker
     /// @param stake the stake to calculate the penalty for
-    /// @return penalty the penalty percentage for the stake
-    function calculateEarlyPenalty(Stake memory stake) public view returns (uint256) {
-        if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
-        uint256 termDelta = block.timestamp - stake.startTs;
-        uint256 scaleTerm = stake.term * ONE_DAY_SECONDS;
-        UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(EARLY_PENALTY_EXPONENT);
-        UD60x18 penalty = toUD60x18(1).sub(base.mul(base));
-        return unwrap(penalty);
+    /// @return reward the reward percentage for the stake
+    function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
+        if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
+        uint256 currentTerm = (block.timestamp - stake.startTs) / ONE_DAY_TS;
+        UD60x18 reward = ud(currentTerm).div(ud(stake.term)).powu(EARLY_PENALTY_EXPONENT);
+        return unwrap(reward);
     }
 
     /// @notice Calculate the late end stake penalty
     /// @dev Calculates the late end stake penality to be split between the pool and the staker
     /// @param stake a parameter just like in doxygen (must be followed by parameter name)
-    /// @return penalty the penalty percentage for the stake
-    function calculateLatePenalty(Stake memory stake) public view returns (uint256) {
-        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_SECONDS);
+    /// @return reward the reward percentage for the stake
+    function calculateLatePayout(Stake memory stake) public view returns (uint256) {
+        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_TS);
         if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
         if (block.timestamp < endTs) revert FenixError.StakeNotEnded();
-        uint256 lateDay = (block.timestamp - endTs) / ONE_DAY_SECONDS;
-        if (lateDay > ONE_EIGHTY_DAYS) return unwrap(toUD60x18(1));
-        uint256 rootNumerator = lateDay;
-        uint256 rootDenominator = ONE_EIGHTY_DAYS;
-        UD60x18 penalty = (toUD60x18(rootNumerator).div(toUD60x18(rootDenominator))).powu(LATE_PENALTY_EXPONENT);
-        return unwrap(penalty);
+
+        uint256 lateTs = block.timestamp - endTs;
+
+        if (lateTs > ONE_EIGHTY_DAYS_TS) return 0;
+
+        UD60x18 penalty = ud(lateTs).div(ud(ONE_EIGHTY_DAYS_TS)).powu(LATE_PENALTY_EXPONENT);
+        UD60x18 reward = ONE.sub(penalty);
+        return unwrap(reward);
     }
 
     function flushRewardPool() public {
         if (block.timestamp < cooldownUnlockTs) revert FenixError.CooldownActive();
-        uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN;
+        uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN_TS;
         stakePoolSupply += rewardPoolSupply;
-        cooldownUnlockTs += REWARD_COOLDOWN + (cooldownPeriods * REWARD_COOLDOWN);
+        cooldownUnlockTs += REWARD_COOLDOWN_TS + (cooldownPeriods * REWARD_COOLDOWN_TS);
         rewardPoolSupply = 0;
         emit FenixEvent.FlushRewardPool();
     }
