@@ -17,7 +17,7 @@ pragma solidity ^0.8.13;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
+import { UD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
@@ -99,8 +99,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    // address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
-    address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+    address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 public constant XEN_RATIO = 10_000;
 
@@ -291,7 +291,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             sizeBonus = ONE.sub(ud(fenix).inv());
         }
 
-        UD60x18 timeBonus = ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)).powu(2);
+        UD60x18 timeBonus = sqrt(ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)));
         UD60x18 bonus = ud(fenix).mul(E.pow(sizeBonus.mul(TEN_PERCENT).add(timeBonus.mul(NINETY_PERCENT))));
         return unwrap(bonus);
     }

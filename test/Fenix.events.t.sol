@@ -51,7 +51,7 @@ contract FenixTest is Test {
             0,
             uint16(term),
             10_000000000000000000,
-            10_941987192909743840,
+            11_659318290783740260,
             0
         );
 
@@ -59,6 +59,7 @@ contract FenixTest is Test {
         emit FenixEvent.StartStake(verifyStake);
 
         fenix.startStake(fenix.balanceOf(bob), term);
+        // helper.printStake(fenix.stakeFor(bob, 0));
     }
 
     /// @notice Test that the defer stake event is emitted
@@ -71,7 +72,7 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            10_941987192909743840,
+            11_659318290783740260,
             10_000000000000000001
         );
 
@@ -83,6 +84,7 @@ contract FenixTest is Test {
         emit FenixEvent.DeferStake(verifyDeferral);
 
         fenix.deferStake(0, bob);
+        // helper.printStake(fenix.stakeFor(bob, 0));
     }
 
     /// @notice Test that the end stake event is emitted
@@ -95,7 +97,7 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            10_941987192909743840,
+            11_659318290783740260,
             10_000000000000000001
         );
 
@@ -107,6 +109,7 @@ contract FenixTest is Test {
         emit FenixEvent.EndStake(verifyEnd);
 
         fenix.endStake(0);
+        // helper.printStake(fenix.stakeFor(bob, 0));
     }
 
     /// @notice Test flush reward pool event is emitted
