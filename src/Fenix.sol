@@ -99,8 +99,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
-    // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+    // address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 public constant XEN_RATIO = 10_000;
 
@@ -122,7 +122,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// Variables
     ///----------------------------------------------------------------------------------------------------------------
 
-    uint40 public immutable startTs;
+    uint40 public immutable genesisTs;
     uint256 public cooldownUnlockTs;
     uint256 public rewardPoolSupply = 0;
 
@@ -140,7 +140,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     ///----------------------------------------------------------------------------------------------------------------
 
     constructor() ERC20("FENIX", "FENIX", 18) {
-        startTs = uint40(block.timestamp);
+        genesisTs = uint40(block.timestamp);
         cooldownUnlockTs = block.timestamp + REWARD_LAUNCH_COOLDOWN_TS;
     }
 
