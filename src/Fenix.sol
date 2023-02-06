@@ -22,7 +22,6 @@ import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
-import { console } from "forge-std/console.sol";
 
 enum Status {
     ACTIVE,
@@ -100,7 +99,6 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     ///----------------------------------------------------------------------------------------------------------------
 
     address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
-    // address public constant XEN_ADDRESS = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
 
     uint256 public constant XEN_RATIO = 10_000;
 
@@ -325,6 +323,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         return unwrap(reward);
     }
 
+    /// @notice Flush reward pool
+    /// @dev Flush reward pool to stake pool
     function flushRewardPool() public {
         if (block.timestamp < cooldownUnlockTs) revert FenixError.CooldownActive();
         uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN_TS;
