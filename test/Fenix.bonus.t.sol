@@ -29,7 +29,7 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 1065581458495049408);
+        assertEq(bonus, 0, "no bonus for amounts less or equal to 1");
     }
 
     /// @notice Test calculating large bonus
@@ -38,7 +38,7 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 117764963_759171172000000000);
+        assertEq(bonus, 1_315178756298285783);
     }
 
     /// @notice Test calculating
@@ -47,6 +47,6 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 106558145849504940);
+        assertEq(bonus, 0, "no bonus for amounts less or equal to 1");
     }
 }

@@ -40,7 +40,7 @@ contract AdoptionRewardTest is Test {
         stakers.push(frank);
         stakers.push(oscar);
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -52,15 +52,15 @@ contract AdoptionRewardTest is Test {
     /// @notice Test that referral can be flushed to the stake pool
     function testReferralRewardToStakePool() public {
         uint256 skipWeeks = 3;
-        uint256 startSupply = fenix.stakePoolSupply();
+        uint256 startPoolSupply = fenix.stakePoolSupply();
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
         fenix.flushRewardPool();
 
-        uint256 endSupply = fenix.stakePoolSupply();
+        uint256 endPoolSupply = fenix.stakePoolSupply();
 
-        assertEq(startSupply, 1); // verify
-        assertEq(endSupply, 60_000000000000000001); // verify
+        assertEq(startPoolSupply, 0); // verify
+        assertEq(endPoolSupply, 60_000000000000000000); // verify
         assertEq(fenix.cooldownUnlockTs(), 9676801); // verify
     }
 
@@ -68,7 +68,7 @@ contract AdoptionRewardTest is Test {
     function testReferralRewardAccumulatesMore() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
 
         assertEq(fenix.rewardPoolSupply(), 120_000000000000000000); // verify
@@ -77,15 +77,15 @@ contract AdoptionRewardTest is Test {
     /// @notice Test referral reward skipping a cooldown
     function testReferralRewardSkipCooldown() public {
         uint256 skipWeeks = 30;
-        uint256 startSupply = fenix.stakePoolSupply();
+        uint256 startPoolSupply = fenix.stakePoolSupply();
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
         fenix.flushRewardPool();
 
-        uint256 endSupply = fenix.stakePoolSupply();
+        uint256 endPoolSupply = fenix.stakePoolSupply();
 
-        assertEq(startSupply, 1); // verify
-        assertEq(endSupply, 60_000000000000000001); // verify
+        assertEq(startPoolSupply, 0); // verify
+        assertEq(endPoolSupply, 60_000000000000000000); // verify
         assertEq(fenix.cooldownUnlockTs(), 25401601); // verify
     }
 

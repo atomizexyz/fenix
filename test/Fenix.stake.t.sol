@@ -32,7 +32,7 @@ contract FenixStakeTest is Test {
 
         stakers.push(bob);
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -114,7 +114,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.stakePoolSupply(), 7_500000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 10_824727374143619540); // verify
     }
 
     /// @notice Test deferring a stake from the owner
@@ -130,7 +130,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.stakePoolSupply(), 1_250000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 1_804121229023936590); // verify
     }
 
     /// @notice Test deferring a stake from the owner
@@ -147,7 +147,7 @@ contract FenixStakeTest is Test {
         Stake memory stake0 = fenix.stakeFor(bob, 0);
         assertTrue(stake0.status == Status.DEFER); // verify
         assertEq(stake0.term, term); // verify
-        assertEq(fenix.stakePoolSupply(), 1_250000000000000001); // verify
+        assertEq(fenix.stakePoolSupply(), 1_804121229023936590); // verify
     }
 
     /// @notice test defer stake early and revert if not owner

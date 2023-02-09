@@ -6,7 +6,7 @@ import { Fenix } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { console } from "forge-std/console.sol";
 
-contract FenixScript is Script {
+contract FenixLocalScript is Script {
     function setUp() public {}
 
     function run() public {

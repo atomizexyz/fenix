@@ -23,10 +23,10 @@ contract HelpersTest is Test {
         }
     }
 
-    function dealXENTo(address[] memory users, uint256 amount, XENCrypto xenCrypto) public {
+    function batchDealTo(address[] memory users, uint256 amount, address token) public {
         for (uint256 i = 0; i < users.length; i++) {
             address userAddress = address(users[i]);
-            deal({ token: address(xenCrypto), to: userAddress, give: amount });
+            deal({ token: token, to: userAddress, give: amount });
         }
     }
 

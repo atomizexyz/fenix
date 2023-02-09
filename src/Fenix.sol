@@ -17,11 +17,12 @@ pragma solidity ^0.8.13;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
+import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
+import { console } from "forge-std/console.sol";
 
 enum Status {
     ACTIVE,
@@ -103,7 +104,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     uint256 public constant XEN_RATIO = 10_000;
 
     uint256 public constant TIME_BONUS = 1_820;
-    uint256 public constant MAX_STAKE_LENGTH_DAYS = 20_075; // 365 * 55 (55 years)
+    uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_665; // 365 * 21 (21 years)
 
     uint256 internal constant ONE_DAY_TS = 86_400; // (1 day)
     uint256 internal constant ONE_EIGHTY_DAYS_TS = 15_552_000; // 86_400 * 180 (180 days)
@@ -128,7 +129,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
     uint256 public maxInflationEndTs = 0;
 
-    uint256 public stakePoolSupply = 1;
+    uint256 public stakePoolSupply = 0;
     uint256 public stakePoolTotalShares = 0;
 
     mapping(address => Stake[]) public stakes;
@@ -189,9 +190,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         uint256 endTs = block.timestamp + term;
         if (endTs > maxInflationEndTs) {
-            UD60x18 root = ONE.add(ANNUAL_INFLATION_RATE);
-            UD60x18 exponent = ud(term).div(ONE_YEAR_DAYS);
-            UD60x18 newPoolSupply = ud(stakePoolSupply).mul(root.pow(exponent));
+            UD60x18 time = ud(term).div(ONE_YEAR_DAYS);
+            UD60x18 newPoolSupply = ud(totalSupply + stakePoolSupply).mul(ANNUAL_INFLATION_RATE.mul(time));
             stakePoolSupply = unwrap(newPoolSupply) + fenix;
             maxInflationEndTs = endTs;
         }
@@ -224,8 +224,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         UD60x18 stakeShares = ud(_stake.shares);
         UD60x18 poolSharePercent = stakeShares.div(ud(stakePoolTotalShares));
-        UD60x18 stakerPoolShares = stakeShares.mul(rewardPercent);
-        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(poolSharePercent).mul(rewardPercent));
+        UD60x18 stakerPoolSupplyPercent = poolSharePercent.mul(rewardPercent);
+
+        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(stakerPoolSupplyPercent));
 
         Stake memory deferredStake = Stake(
             Status.DEFER,
@@ -238,8 +239,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         );
 
         stakes[stakerAddress][stakeIndex] = deferredStake;
-        stakePoolTotalShares -= unwrap(stakerPoolShares);
 
+        stakePoolTotalShares -= _stake.shares;
         stakePoolSupply -= stakerSupply;
 
         emit FenixEvent.DeferStake(deferredStake);
@@ -288,9 +289,8 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (ud(fenix).gte(ONE)) {
             sizeBonus = ONE.sub(ud(fenix).inv());
         }
-
-        UD60x18 timeBonus = sqrt(ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)));
-        UD60x18 bonus = ud(fenix).mul(E.pow(sizeBonus.mul(TEN_PERCENT).add(timeBonus.mul(NINETY_PERCENT))));
+        UD60x18 timeBonus = ud(term).div(ud(365));
+        UD60x18 bonus = sizeBonus.mul(E.pow(timeBonus));
         return unwrap(bonus);
     }
 
@@ -300,9 +300,10 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @return reward the reward percentage for the stake
     function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
         if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
-        uint256 currentTerm = (block.timestamp - stake.startTs) / ONE_DAY_TS;
-        UD60x18 reward = ud(currentTerm).div(ud(stake.term)).powu(2);
-        return unwrap(reward);
+        uint256 termDelta = block.timestamp - stake.startTs;
+        uint256 scaleTerm = stake.term * ONE_DAY_TS;
+        UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
+        return unwrap(base);
     }
 
     /// @notice Calculate the late end stake penalty

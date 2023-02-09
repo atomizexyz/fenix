@@ -30,7 +30,7 @@ contract FenixTest is Test {
 
         stakers.push(bob);
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -39,7 +39,7 @@ contract FenixTest is Test {
         vm.expectEmit(true, true, false, false);
         emit FenixEvent.MintFenix(address(bob), 10_000000000000000000);
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -51,7 +51,7 @@ contract FenixTest is Test {
             0,
             uint16(term),
             10_000000000000000000,
-            11_659318290783740260,
+            1183660892505066130,
             0
         );
 
@@ -72,8 +72,8 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            11_659318290783740260,
-            10_000000000000000001
+            1183660892505066130,
+            14_432969832191492720
         );
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -97,8 +97,8 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            11_659318290783740260,
-            10_000000000000000001
+            1183660892505066130,
+            14_432969832191492720
         );
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -127,15 +127,16 @@ contract FenixTest is Test {
     /// @notice Test share rate update event
     function testUpdateShareRateEvent() public {
         uint40 blockTs = uint40(block.timestamp);
-        uint256 oneYearTerm = 3650;
+        uint256 oneYearTerm = 365;
 
         fenix.startStake(fenix.balanceOf(bob), oneYearTerm);
 
         vm.warp(blockTs + (86_400 * oneYearTerm));
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.UpdateShareRate(1_000000000000001512);
+        emit FenixEvent.UpdateShareRate(2_618033988749894848);
 
         fenix.endStake(0);
+        // console.log(fenix.shareRate());
     }
 }

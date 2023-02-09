@@ -28,7 +28,7 @@ contract FenixPayoutTest is Test {
 
         stakers.push(bob);
 
-        helper.dealXENTo(stakers, tenKXen, xenCrypto);
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
