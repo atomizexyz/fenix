@@ -63,13 +63,11 @@ contract FenixPayoutTest is Test {
     }
 
     function testCalculateEarlyPayoutFailEarly() public {
-        uint256 amount = 21e18;
-        uint256 shares = fenix.calculateBonus(amount, 356);
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
 
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, amount, shares, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, 100, 100, 0);
 
         vm.warp(blockTs - 86400);
 
@@ -78,13 +76,11 @@ contract FenixPayoutTest is Test {
     }
 
     function testCalculateEarlyPayoutFailLate() public {
-        uint256 amount = 21e18;
-        uint256 shares = fenix.calculateBonus(amount, 356);
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
 
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, amount, shares, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, 100, 100, 0);
 
         vm.warp(blockTs + (86400 * 101));
 
@@ -119,5 +115,27 @@ contract FenixPayoutTest is Test {
         vm.warp(blockTs + (86400 * (baseTerm + 360)));
         uint256 reward200 = fenix.calculateLatePayout(stake1);
         assertEq(reward200, 0); // verify 0% reward
+    }
+
+    function testCalculateLatePayoutFailBeforeStart() public {
+        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
+
+        vm.warp(blockTs - 86400);
+
+        vm.expectRevert(FenixError.StakeNotStarted.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    function testCalculateLatePayoutFailBeforeEnd() public {
+        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
+
+        vm.warp(blockTs + 86400);
+
+        vm.expectRevert(FenixError.StakeNotEnded.selector); // verify
+        fenix.calculateLatePayout(stake1);
     }
 }
