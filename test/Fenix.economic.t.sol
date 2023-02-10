@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake, Status, FenixError } from "@atomize/Fenix.sol";
+import { Fenix, Stake, Status } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 

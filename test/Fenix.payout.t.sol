@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake, Status } from "@atomize/Fenix.sol";
+import { Fenix, Stake, Status, FenixError } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -32,7 +32,7 @@ contract FenixPayoutTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
-    /// @notice Test stake penality
+    /// @notice Test stake payout
     function testCalculateEarlyPayout() public {
         uint256 amount = 21e18;
 
@@ -60,6 +60,36 @@ contract FenixPayoutTest is Test {
         vm.warp(blockTs + (86400 * 100));
         uint256 reward100 = fenix.calculateEarlyPayout(stake1);
         assertEq(reward100, 1000000000000000000); // verify 100% reward
+    }
+
+    function testCalculateEarlyPayoutFailEarly() public {
+        uint256 amount = 21e18;
+        uint256 shares = fenix.calculateBonus(amount, 356);
+        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+
+        vm.warp(blockTs + (86400 * 10));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, amount, shares, 0);
+
+        vm.warp(blockTs - 86400);
+
+        vm.expectRevert(FenixError.StakeNotStarted.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    function testCalculateEarlyPayoutFailLate() public {
+        uint256 amount = 21e18;
+        uint256 shares = fenix.calculateBonus(amount, 356);
+        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+
+        vm.warp(blockTs + (86400 * 10));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, amount, shares, 0);
+
+        vm.warp(blockTs + (86400 * 101));
+
+        vm.expectRevert(FenixError.StakeEnded.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
     }
 
     function testCalculateLatePayout() public {

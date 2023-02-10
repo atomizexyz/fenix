@@ -86,6 +86,7 @@ library FenixError {
     error TermGreaterThanMax();
     error StakeNotStarted();
     error StakeNotEnded();
+    error StakeEnded();
     error CooldownActive();
     error StakeStatusAlreadySet(Status status);
 }
@@ -299,7 +300,9 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param stake the stake to calculate the penalty for
     /// @return reward the reward percentage for the stake
     function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
+        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_TS);
         if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
+        if (block.timestamp > endTs) revert FenixError.StakeEnded();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_TS;
         UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
