@@ -62,7 +62,7 @@ contract FenixPayoutTest is Test {
         assertEq(reward100, 1000000000000000000); // verify 100% reward
     }
 
-    function testCalculateEarlyPayoutFailEarly() public {
+    function testCalculateEarlyPayoutRevertIfStakeNotStarted() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
@@ -75,7 +75,7 @@ contract FenixPayoutTest is Test {
         fenix.calculateEarlyPayout(stake1);
     }
 
-    function testCalculateEarlyPayoutFailLate() public {
+    function testCalculateEarlyPayoutRevertIfStakeEnded() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
@@ -117,7 +117,7 @@ contract FenixPayoutTest is Test {
         assertEq(reward200, 0); // verify 0% reward
     }
 
-    function testCalculateLatePayoutFailBeforeStart() public {
+    function testCalculateLatePayoutRevertIfStakeNotStarted() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
@@ -128,7 +128,7 @@ contract FenixPayoutTest is Test {
         fenix.calculateLatePayout(stake1);
     }
 
-    function testCalculateLatePayoutFailBeforeEnd() public {
+    function testCalculateLatePayoutRevertIfStakeNotEnded() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);

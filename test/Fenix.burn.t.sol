@@ -46,16 +46,27 @@ contract FenixBurnTest is Test {
         assertLe(amount / fenix.XEN_RATIO(), balancePostBurn);
     }
 
-    /// @notice Test that the contract can be deployed successfully
-    function testBurnFromZeroAddress() public {
-        // deal({ token: address(xenCrypto), to: address(alice), give: tenKXen });
+    /// @notice Test token burn and revert if wrong caller
+    function testTokenBurnRevertIfWrongCaller() public {
+        vm.expectRevert(abi.encodeWithSelector(FenixError.WrongCaller.selector, address(bob))); // verify
 
-        vm.prank(address(alice));
-        xenCrypto.approve(address(fenix), tenKXen);
+        vm.prank(address(bob));
+        fenix.onTokenBurned(address(bob), 100);
+    }
 
+    /// @notice Test token burn and revert if address is zero
+    function testTokenBurnRevertIfAddressZero() public {
         vm.expectRevert(FenixError.AddressZero.selector); // verify
 
-        vm.prank(address(alice));
-        fenix.burnXEN(tenKXen);
+        vm.prank(address(xenCrypto));
+        fenix.onTokenBurned(address(0), 100);
+    }
+
+    /// @notice Test token burn and revert if balance is zero
+    function testTokenBurnRevertIfBalanceZero() public {
+        vm.expectRevert(FenixError.BalanceZero.selector); // verify
+
+        vm.prank(address(xenCrypto));
+        fenix.onTokenBurned(address(bob), 0);
     }
 }
