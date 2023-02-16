@@ -19,6 +19,7 @@ pragma solidity ^0.8.13;
 
 import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
@@ -95,7 +96,7 @@ library FenixError {
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
-contract Fenix is ERC20, IBurnRedeemable, IERC165 {
+contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     ///----------------------------------------------------------------------------------------------------------------
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
@@ -156,7 +157,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @param user the address of the user to mint FENIX tokens for
     /// @param amount the amount of FENIX tokens to mint
     function onTokenBurned(address user, uint256 amount) external {
-        if (msg.sender != XEN_ADDRESS) revert FenixError.WrongCaller(msg.sender);
+        if (_msgSender() != XEN_ADDRESS) revert FenixError.WrongCaller(_msgSender());
         if (user == address(0)) revert FenixError.AddressZero();
         if (amount == 0) revert FenixError.BalanceZero();
 
@@ -170,7 +171,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @dev Execute proof of burn on remote contract to burn XEN tokens
     /// @param xen the amount of XEN to burn from the current wallet address
     function burnXEN(uint256 xen) public {
-        IBurnableToken(XEN_ADDRESS).burn(msg.sender, xen);
+        IBurnableToken(XEN_ADDRESS).burn(_msgSender(), xen);
     }
 
     /// @notice Starts a stake
@@ -187,7 +188,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
         Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, shares, 0);
 
-        stakes[msg.sender].push(_stake);
+        stakes[_msgSender()].push(_stake);
 
         uint256 endTs = block.timestamp + term;
         if (endTs > maxInflationEndTs) {
@@ -199,7 +200,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
 
         stakePoolTotalShares += shares;
 
-        _burn(msg.sender, fenix);
+        _burn(_msgSender(), fenix);
         emit FenixEvent.StartStake(_stake);
     }
 
@@ -214,7 +215,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
         if (_stake.status != Status.ACTIVE) return;
         uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_TS);
 
-        if (block.timestamp < endTs && msg.sender != stakerAddress) revert FenixError.WrongCaller(msg.sender);
+        if (block.timestamp < endTs && _msgSender() != stakerAddress) revert FenixError.WrongCaller(_msgSender());
 
         UD60x18 rewardPercent = ZERO;
         if (block.timestamp > endTs) {
@@ -251,13 +252,13 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
     /// @dev End a stake by allocating the stake supply to the stakers wallet
     /// @param stakeIndex the index of the stake to end
     function endStake(uint256 stakeIndex) public {
-        deferStake(stakeIndex, msg.sender);
+        deferStake(stakeIndex, _msgSender());
 
-        Stake memory _stake = stakes[msg.sender][stakeIndex];
+        Stake memory _stake = stakes[_msgSender()][stakeIndex];
         if (_stake.status == Status.END) revert FenixError.StakeStatusAlreadySet(Status.END);
 
         emit FenixEvent.EndStake(_stake);
-        _mint(msg.sender, _stake.payout);
+        _mint(_msgSender(), _stake.payout);
 
         uint256 returnOnStake = unwrap(ud(_stake.payout).div(ud(_stake.fenix)));
         if (returnOnStake > shareRate) {
@@ -275,7 +276,7 @@ contract Fenix is ERC20, IBurnRedeemable, IERC165 {
             _stake.payout
         );
 
-        stakes[msg.sender][stakeIndex] = endedStake;
+        stakes[_msgSender()][stakeIndex] = endedStake;
 
         emit FenixEvent.EndStake(endedStake);
     }
