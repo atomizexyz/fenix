@@ -10,10 +10,11 @@ contract FenixProdScript is Script {
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
         vm.startBroadcast(deployerPrivateKey);
 
         Fenix fenix = new Fenix();
-        console.log("FENIX:", address(fenix));
+        console.log("FENIX: ", address(fenix));
 
         vm.stopBroadcast();
     }

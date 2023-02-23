@@ -183,9 +183,8 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
         if (term == 0) revert FenixError.TermZero();
         if (term > MAX_STAKE_LENGTH_DAYS) revert FenixError.TermGreaterThanMax();
         uint256 bonus = calculateBonus(fenix, term);
+        uint256 shares = calculateShares(bonus);
 
-        // Convert effective FENIX bonus to shares
-        uint256 shares = unwrap(ud(bonus).div(ud(shareRate)));
         Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, shares, 0);
 
         stakes[_msgSender()].push(_stake);
@@ -281,19 +280,45 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
         emit FenixEvent.EndStake(endedStake);
     }
 
-    /// @notice Calculate share bonus
+    /// @notice Calculate bonus
     /// @dev Use fenix amount and term to calcualte size and time bonus used for pool equity stake
     /// @param fenix the amount of fenix used to calculate the equity stake
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the bonus for pool equity stake
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
-        UD60x18 sizeBonus = ZERO;
-        if (ud(fenix).gte(ONE)) {
-            sizeBonus = ONE.sub(ud(fenix).inv());
-        }
-        UD60x18 timeBonus = ud(term).div(ud(365));
+        UD60x18 sizeBonus = ud(calculateSizeBonus(fenix));
+        UD60x18 timeBonus = ud(calcualteTimeBons(term));
         UD60x18 bonus = sizeBonus.mul(E.pow(timeBonus));
         return unwrap(bonus);
+    }
+
+    /// @notice Calculate size bonus
+    /// @dev Use fenix amount to calculate the size bonus used for pool equity stake
+    /// @param fenix the amount of fenix used to calculate the equity stake
+    /// @return bonus the size bonus for pool equity stake
+    function calculateSizeBonus(uint256 fenix) public pure returns (uint256) {
+        if (ud(fenix).lt(ONE)) {
+            return 0;
+        }
+        return unwrap(ONE.sub(ud(fenix).inv()));
+    }
+
+    /// @notice Calculate time bonus
+    /// @dev Use term to calculate the time bonus used for pool equity stake
+    /// @param term the term of the stake in days used to calculate the pool equity stake
+    /// @return bonus the time bonus for pool equity stake
+    function calcualteTimeBons(uint256 term) public pure returns (uint256) {
+        UD60x18 timeBonus = ud(term).div(ud(365));
+        return unwrap(timeBonus);
+    }
+
+    /// @notice Calculate shares
+    /// @dev Use bonus to calculate the number of shares to be issued to the staker
+    /// @param bonus the bonus to calculate the shares from
+    /// @return shares the number of shares to be issued to the staker
+    function calculateShares(uint256 bonus) public view returns (uint256) {
+        UD60x18 shares = ud(bonus).div(ud(shareRate));
+        return unwrap(shares);
     }
 
     /// @notice Calcualte the early end stake penalty

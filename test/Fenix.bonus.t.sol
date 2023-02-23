@@ -19,6 +19,7 @@ contract BonusTest is Test {
 
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
+        console.log(address(xenCrypto));
 
         fenix = new Fenix();
     }
