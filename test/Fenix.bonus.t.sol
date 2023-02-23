@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix } from "@atomize/Fenix.sol";
+import { Fenix, FenixError } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -19,7 +19,6 @@ contract BonusTest is Test {
 
         vm.broadcast(helper.xenDeployerPrivateKey());
         xenCrypto = new XENCrypto();
-        console.log(address(xenCrypto));
 
         fenix = new Fenix();
     }
@@ -49,5 +48,20 @@ contract BonusTest is Test {
 
         uint256 bonus = fenix.calculateBonus(amount, term);
         assertEq(bonus, 0, "no bonus for amounts less or equal to 1");
+    }
+
+    /// @notice Test that size bonus will always return value greater than or equal to zero
+    function testCalculateSizeBonus(uint256 fuzzFenix) public {
+        uint256 bonus = fenix.calculateSizeBonus(fuzzFenix);
+        assertGe(bonus, 0); // verify
+    }
+
+    /// @notice Test that time bonus will always return greater than zero
+    function testCalculateTimeBonus(uint256 fuzzTerm) public {
+        if (fuzzTerm > fenix.MAX_STAKE_LENGTH_DAYS()) {
+            vm.expectRevert(FenixError.TermGreaterThanMax.selector); // verify
+        }
+        uint256 bonus = fenix.calcualteTimeBonus(fuzzTerm);
+        assertGe(bonus, 0); // verify
     }
 }

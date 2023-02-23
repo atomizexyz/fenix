@@ -181,7 +181,6 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     function startStake(uint256 fenix, uint256 term) public {
         if (fenix == 0) revert FenixError.BalanceZero();
         if (term == 0) revert FenixError.TermZero();
-        if (term > MAX_STAKE_LENGTH_DAYS) revert FenixError.TermGreaterThanMax();
         uint256 bonus = calculateBonus(fenix, term);
         uint256 shares = calculateShares(bonus);
 
@@ -287,7 +286,7 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     /// @return bonus the bonus for pool equity stake
     function calculateBonus(uint256 fenix, uint256 term) public pure returns (uint256) {
         UD60x18 sizeBonus = ud(calculateSizeBonus(fenix));
-        UD60x18 timeBonus = ud(calcualteTimeBons(term));
+        UD60x18 timeBonus = ud(calcualteTimeBonus(term));
         UD60x18 bonus = sizeBonus.mul(E.pow(timeBonus));
         return unwrap(bonus);
     }
@@ -307,7 +306,8 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     /// @dev Use term to calculate the time bonus used for pool equity stake
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the time bonus for pool equity stake
-    function calcualteTimeBons(uint256 term) public pure returns (uint256) {
+    function calcualteTimeBonus(uint256 term) public pure returns (uint256) {
+        if (term > MAX_STAKE_LENGTH_DAYS) revert FenixError.TermGreaterThanMax();
         UD60x18 timeBonus = ud(term).div(ud(365));
         return unwrap(timeBonus);
     }

@@ -81,4 +81,10 @@ contract FenixShareTest is Test {
         assertGt(aliceFinalBalance, bobFinalBalance); // verify
         assertEq(fenix.stakePoolSupply(), 0); // verify
     }
+
+    /// @notice Test that shares will also return great than zero
+    function testCalculateShares(uint256 fuzzShares) public {
+        uint256 shares = fenix.calculateShares(fuzzShares);
+        assertGe(shares, 0); // verify
+    }
 }
