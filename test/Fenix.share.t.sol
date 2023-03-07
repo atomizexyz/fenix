@@ -44,8 +44,8 @@ contract FenixShareTest is Test {
         fenix.endStake(0);
 
         assertGt(fenix.shareRate(), 1e18); // verify
-        assertEq(fenix.shareRate(), 33_360679774997896960); // verify
-        assertEq(fenix.stakePoolSupply(), 0); // verify
+        assertEq(fenix.shareRate(), 17_180339887498948480); // verify
+        assertEq(fenix.equityPoolSupply(), 0); // verify
     }
 
     /// @notice Test that the contract can be deployed successfully
@@ -56,11 +56,13 @@ contract FenixShareTest is Test {
         uint256 blockTs = block.timestamp;
 
         uint256 aliceLongUpdateBalance = fenix.balanceOf(alice);
+
         vm.prank(alice);
         fenix.startStake(aliceLongUpdateBalance, longTerm);
 
         for (uint256 i = 0; i < longTerm; i++) {
             uint256 bobShortUpdateBalance = fenix.balanceOf(bob);
+
             vm.prank(bob);
             fenix.startStake(bobShortUpdateBalance, shortTerm);
 
@@ -79,7 +81,7 @@ contract FenixShareTest is Test {
         uint256 aliceFinalBalance = fenix.balanceOf(alice);
 
         assertGt(aliceFinalBalance, bobFinalBalance); // verify
-        assertEq(fenix.stakePoolSupply(), 0); // verify
+        assertEq(fenix.equityPoolSupply(), 0); // verify
     }
 
     /// @notice Test that shares will also return great than zero

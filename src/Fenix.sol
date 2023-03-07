@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.19;
 
 /***********************************************************************************************************************
         ..:^~!?YPB&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -23,7 +23,6 @@ import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
-import { console } from "forge-std/console.sol";
 
 enum Status {
     ACTIVE,
@@ -105,7 +104,6 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
 
     uint256 public constant XEN_RATIO = 10_000;
 
-    uint256 public constant TIME_BONUS = 1_820;
     uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_665; // 365 * 21 (21 years)
 
     uint256 internal constant ONE_DAY_TS = 86_400; // (1 day)
@@ -115,8 +113,6 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
 
     UD60x18 public constant ANNUAL_INFLATION_RATE = UD60x18.wrap(1_618033988749894848);
     UD60x18 internal constant ONE = UD60x18.wrap(1e18);
-    UD60x18 internal constant TEN_PERCENT = UD60x18.wrap(0.1e18);
-    UD60x18 internal constant NINETY_PERCENT = UD60x18.wrap(0.9e18);
     UD60x18 internal constant ONE_YEAR_DAYS = UD60x18.wrap(365);
 
     ///----------------------------------------------------------------------------------------------------------------
@@ -131,8 +127,8 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
 
     uint256 public maxInflationEndTs = 0;
 
-    uint256 public stakePoolSupply = 0;
-    uint256 public stakePoolTotalShares = 0;
+    uint256 public equityPoolSupply = 0;
+    uint256 public equityPoolTotalShares = 0;
 
     mapping(address => Stake[]) public stakes;
 
@@ -184,19 +180,15 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
         uint256 bonus = calculateBonus(fenix, term);
         uint256 shares = calculateShares(bonus);
 
+        UD60x18 time = ud(term).div(ONE_YEAR_DAYS);
+        uint256 inflatedSupply = unwrap(ud(fenix).mul(ANNUAL_INFLATION_RATE.mul(time)));
+        uint256 newEquity = fenix + inflatedSupply;
+
+        equityPoolSupply += newEquity;
+        equityPoolTotalShares += shares;
+
         Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, shares, 0);
-
         stakes[_msgSender()].push(_stake);
-
-        uint256 endTs = block.timestamp + term;
-        if (endTs > maxInflationEndTs) {
-            UD60x18 time = ud(term).div(ONE_YEAR_DAYS);
-            UD60x18 newPoolSupply = ud(totalSupply + stakePoolSupply).mul(ANNUAL_INFLATION_RATE.mul(time));
-            stakePoolSupply = unwrap(newPoolSupply) + fenix;
-            maxInflationEndTs = endTs;
-        }
-
-        stakePoolTotalShares += shares;
 
         _burn(_msgSender(), fenix);
         emit FenixEvent.StartStake(_stake);
@@ -223,10 +215,10 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
         }
 
         UD60x18 stakeShares = ud(_stake.shares);
-        UD60x18 poolSharePercent = stakeShares.div(ud(stakePoolTotalShares));
+        UD60x18 poolSharePercent = stakeShares.div(ud(equityPoolTotalShares));
         UD60x18 stakerPoolSupplyPercent = poolSharePercent.mul(rewardPercent);
 
-        uint256 stakerSupply = unwrap(ud(stakePoolSupply).mul(stakerPoolSupplyPercent));
+        uint256 equitySupply = unwrap(ud(equityPoolSupply).mul(stakerPoolSupplyPercent));
 
         Stake memory deferredStake = Stake(
             Status.DEFER,
@@ -235,13 +227,13 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
             _stake.term,
             _stake.fenix,
             _stake.shares,
-            stakerSupply
+            equitySupply
         );
 
         stakes[stakerAddress][stakeIndex] = deferredStake;
 
-        stakePoolTotalShares -= _stake.shares;
-        stakePoolSupply -= stakerSupply;
+        equityPoolTotalShares -= _stake.shares;
+        equityPoolSupply -= equitySupply;
 
         emit FenixEvent.DeferStake(deferredStake);
     }
@@ -259,6 +251,7 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
         _mint(_msgSender(), _stake.payout);
 
         uint256 returnOnStake = unwrap(ud(_stake.payout).div(ud(_stake.fenix)));
+
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
             emit FenixEvent.UpdateShareRate(shareRate);
@@ -296,9 +289,7 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     /// @param fenix the amount of fenix used to calculate the equity stake
     /// @return bonus the size bonus for pool equity stake
     function calculateSizeBonus(uint256 fenix) public pure returns (uint256) {
-        if (ud(fenix).lt(ONE)) {
-            return 0;
-        }
+        if (ud(fenix).lt(ONE)) return 0;
         return unwrap(ONE.sub(ud(fenix).inv()));
     }
 
@@ -358,7 +349,7 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     function flushRewardPool() public {
         if (block.timestamp < cooldownUnlockTs) revert FenixError.CooldownActive();
         uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN_TS;
-        stakePoolSupply += rewardPoolSupply;
+        equityPoolSupply += rewardPoolSupply;
         cooldownUnlockTs += REWARD_COOLDOWN_TS + (cooldownPeriods * REWARD_COOLDOWN_TS);
         rewardPoolSupply = 0;
         emit FenixEvent.FlushRewardPool();

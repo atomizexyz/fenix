@@ -52,12 +52,12 @@ contract AdoptionRewardTest is Test {
     /// @notice Test that referral can be flushed to the stake pool
     function testReferralRewardToStakePool() public {
         uint256 skipWeeks = 3;
-        uint256 startPoolSupply = fenix.stakePoolSupply();
+        uint256 startPoolSupply = fenix.equityPoolSupply();
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
         fenix.flushRewardPool();
 
-        uint256 endPoolSupply = fenix.stakePoolSupply();
+        uint256 endPoolSupply = fenix.equityPoolSupply();
 
         assertEq(startPoolSupply, 0); // verify
         assertEq(endPoolSupply, 60_000000000000000000); // verify
@@ -77,12 +77,12 @@ contract AdoptionRewardTest is Test {
     /// @notice Test referral reward skipping a cooldown
     function testReferralRewardSkipCooldown() public {
         uint256 skipWeeks = 30;
-        uint256 startPoolSupply = fenix.stakePoolSupply();
+        uint256 startPoolSupply = fenix.equityPoolSupply();
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
         fenix.flushRewardPool();
 
-        uint256 endPoolSupply = fenix.stakePoolSupply();
+        uint256 endPoolSupply = fenix.equityPoolSupply();
 
         assertEq(startPoolSupply, 0); // verify
         assertEq(endPoolSupply, 60_000000000000000000); // verify
