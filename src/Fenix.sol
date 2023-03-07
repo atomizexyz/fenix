@@ -125,8 +125,6 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
     uint256 public shareRate = 1e18;
 
-    uint256 public maxInflationEndTs = 0;
-
     uint256 public equityPoolSupply = 0;
     uint256 public equityPoolTotalShares = 0;
 
@@ -299,7 +297,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @return bonus the time bonus for pool equity stake
     function calcualteTimeBonus(uint256 term) public pure returns (uint256) {
         if (term > MAX_STAKE_LENGTH_DAYS) revert FenixError.TermGreaterThanMax();
-        UD60x18 timeBonus = ud(term).div(ud(365));
+        UD60x18 timeBonus = ONE.add(ud(term).div(ud(MAX_STAKE_LENGTH_DAYS)));
         return unwrap(timeBonus);
     }
 

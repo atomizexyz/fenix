@@ -108,10 +108,10 @@ contract FenixEconomicTest is Test {
 
         assertGt(alicePayout, bobPayout);
 
-        assertEq(bobPayout, 53_83713790082926450);
+        assertEq(bobPayout, 32_365176269009653727);
         assertEq(fenix.stakeCount(bob), 1);
 
-        assertEq(alicePayout, 633_78954364023493590);
+        assertEq(alicePayout, 36_397491885096766313);
         assertEq(fenix.stakeCount(alice), 1);
     }
 
@@ -188,10 +188,10 @@ contract FenixEconomicTest is Test {
 
         assertGt(alicePayout, bobPayout);
 
-        assertEq(bobPayout, 273592927936);
+        assertEq(bobPayout, 96_782816454158829703);
         assertEq(fenix.stakeCount(bob), 1);
 
-        assertEq(alicePayout, 359_831467062206905064);
+        assertEq(alicePayout, 263_048650881641003297);
         assertEq(fenix.stakeCount(alice), 1);
     }
 
@@ -277,7 +277,7 @@ contract FenixEconomicTest is Test {
 
     /// @notice Test minimum stake term return vs max term
     function testMinimumStakeTermVsMax() public {
-        uint256 bobTerm = 6157;
+        uint256 bobTerm = 1;
         uint256 aliceTerm = fenix.MAX_STAKE_LENGTH_DAYS();
         uint40 blockTs = uint40(block.timestamp);
 
