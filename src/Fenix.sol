@@ -18,7 +18,7 @@ pragma solidity ^0.8.19;
 ***********************************************************************************************************************/
 
 import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
@@ -95,7 +95,7 @@ library FenixError {
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
-contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
+contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     ///----------------------------------------------------------------------------------------------------------------
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ contract Fenix is ERC20, Context, IBurnRedeemable, IERC165 {
     /// Contract
     ///----------------------------------------------------------------------------------------------------------------
 
-    constructor() ERC20("FENIX", "FENIX", 18) {
+    constructor() {
         genesisTs = uint40(block.timestamp);
         cooldownUnlockTs = block.timestamp + REWARD_LAUNCH_COOLDOWN_TS;
     }
