@@ -61,7 +61,7 @@ contract BonusTest is Test {
         if (fuzzTerm > fenix.MAX_STAKE_LENGTH_DAYS()) {
             vm.expectRevert(FenixError.TermGreaterThanMax.selector); // verify
         }
-        uint256 bonus = fenix.calcualteTimeBonus(fuzzTerm);
+        uint256 bonus = fenix.calculateTimeBonus(fuzzTerm);
         assertGe(bonus, 0); // verify
     }
 }
