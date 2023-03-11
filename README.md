@@ -57,6 +57,40 @@ forge test
 yarn lint
 ```
 
+## Gas Report
+
+| src/Fenix.sol:Fenix contract |                 |        |        |        |         |
+| ---------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost              | Deployment Size |        |        |        |         |
+| 2866891                      | 14437           |        |        |        |         |
+| Function Name                | min             | avg    | median | max    | # calls |
+| MAX_STAKE_LENGTH_DAYS        | 262             | 262    | 262    | 262    | 5       |
+| XEN_BURN_RATIO               | 285             | 285    | 285    | 285    | 1       |
+| balanceOf                    | 584             | 1397   | 584    | 2584   | 86      |
+| burnXEN                      | 17690           | 60511  | 45050  | 96010  | 133     |
+| calculateBonus               | 10820           | 11004  | 11047  | 11103  | 4       |
+| calculateEarlyPayout         | 1117            | 2170   | 2589   | 2589   | 7       |
+| calculateLatePayout          | 1095            | 1884   | 2428   | 2428   | 7       |
+| calculateShares              | 2858            | 2858   | 2858   | 2858   | 1       |
+| calculateSizeBonus           | 452             | 452    | 452    | 452    | 1       |
+| calculateTimeBonus           | 920             | 920    | 920    | 920    | 1       |
+| cooldownUnlockTs             | 362             | 362    | 362    | 362    | 2       |
+| decimals                     | 289             | 289    | 289    | 289    | 1       |
+| deferStake                   | 1755            | 18260  | 22964  | 22980  | 9       |
+| endStake                     | 2587            | 29474  | 29887  | 33126  | 58      |
+| equityPoolSupply             | 385             | 718    | 385    | 2385   | 12      |
+| flushRewardPool              | 372             | 19146  | 27033  | 29033  | 6       |
+| name                         | 3243            | 3243   | 3243   | 3243   | 1       |
+| onTokenBurned                | 502             | 38892  | 26757  | 68557  | 136     |
+| rewardPoolSupply             | 362             | 1695   | 2362   | 2362   | 3       |
+| shareRate                    | 405             | 405    | 405    | 405    | 2       |
+| stakeCount                   | 581             | 581    | 581    | 581    | 7       |
+| stakeFor                     | 1960            | 1960   | 1960   | 1960   | 12      |
+| startStake                   | 393             | 122735 | 121765 | 162177 | 73      |
+| supportsInterface            | 357             | 357    | 357    | 357    | 133     |
+| symbol                       | 3263            | 3263   | 3263   | 3263   | 1       |
+| totalSupply                  | 360             | 1360   | 1360   | 2360   | 4       |
+
 ## Acknowledgements
 
 - [Bitcoin](https://github.com/bitcoin/bitcoin) (Jan 8, 2009) — Censorship resistant zero counter party risk value
