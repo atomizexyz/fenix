@@ -102,7 +102,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
     address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
 
-    uint256 public constant XEN_RATIO = 10_000;
+    uint256 public constant XEN_BURN_RATIO = 10_000;
 
     uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_665; // 365 * 21 (21 years)
 
@@ -155,7 +155,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         if (user == address(0)) revert FenixError.AddressZero();
         if (amount == 0) revert FenixError.BalanceZero();
 
-        uint256 fenix = amount / XEN_RATIO;
+        uint256 fenix = amount / XEN_BURN_RATIO;
         rewardPoolSupply += fenix;
         _mint(user, fenix);
         emit FenixEvent.MintFenix(user, fenix);

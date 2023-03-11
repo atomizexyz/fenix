@@ -37,7 +37,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test starting stake works
-    function testStakeStartOne() public {
+    function test_StakeStartOne() public {
         fenix.startStake(fenix.balanceOf(bob), term);
 
         Stake memory stake0 = fenix.stakeFor(bob, 0);
@@ -45,7 +45,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test starting multiple stakes
-    function testStakeStartMultiple() public {
+    function test_StakeStartMultiple() public {
         uint256 fenixBalanceThird = fenix.balanceOf(bob) / 3;
 
         fenix.startStake(fenixBalanceThird, term);
@@ -63,7 +63,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test reverting stake with term
-    function testStakeStartRevertIfBalanceZero() public {
+    function test_StakeStart_RevertWhen_BalanceZero() public {
         uint256 fenixBalance = 0;
 
         vm.expectRevert(FenixError.BalanceZero.selector); // verify
@@ -80,7 +80,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test reverting stake with term over max
-    function testStakeStartRevertIfTermGreaterThanMax() public {
+    function test_StakeStart_RevertWhen_TermGreaterThanMax() public {
         uint256 maxTerm = fenix.MAX_STAKE_LENGTH_DAYS() + 1; // 365 * 55 + 1
         uint256 fenixBalance = 10e18;
         vm.expectRevert(FenixError.TermGreaterThanMax.selector); // verify
@@ -88,7 +88,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test deferring stake
-    function testDeferStakeOwner() public {
+    function test_DeferStakeOwner() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -102,7 +102,7 @@ contract FenixStakeTest is Test {
         assertEq(fenix.stakeFor(bob, 0).term, term); // verify
     }
 
-    function testDeferStakeOwnerEarly() public {
+    function test_DeferStakeOwnerEarly() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -118,7 +118,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test deferring a stake from the owner
-    function testDeferStakeOwnerLate() public {
+    function test_DeferStakeOwnerLate() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -134,7 +134,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice Test deferring a stake from the owner
-    function testDeferStakeNonOwnerLate() public {
+    function test_DeferStakeNonOwnerLate() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -151,7 +151,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice test defer stake early and revert if not owner
-    function testDeferStakeRevertIfNotOwner() public {
+    function test_DeferStake_RevertWhen_NotOwner() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -164,7 +164,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice test deferring a stake and ignore if already deferred
-    function testDeferStakeIgnoreMultipleIfAlreadyDeferred() public {
+    function test_DeferStakeIgnoreMultipleIfAlreadyDeferred() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -176,7 +176,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice test end stake
-    function testEndStake() public {
+    function test_EndStake() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -191,7 +191,7 @@ contract FenixStakeTest is Test {
     }
 
     /// @notice test defer then end stake
-    function testDeferStakeThenEndStake() public {
+    function test_DeferStakeThenEndStake() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -209,8 +209,8 @@ contract FenixStakeTest is Test {
         assertEq(fenix.equityPoolSupply(), 0); // verify
     }
 
-    /// @notice test end stake and revert if not owner
-    function testEndStakeRevertIfNotOwner() public {
+    /// @notice test end stake and revert when not owner
+    function test_EndStake_RevertWhen_NotOwner() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -225,8 +225,8 @@ contract FenixStakeTest is Test {
         assertTrue(stake0.status == Status.ACTIVE); // verify
     }
 
-    /// @notice test end stake and revert is already ended
-    function testEndStakeRevertIfAlreadyEnded() public {
+    /// @notice test end stake and revert when stake is already ended
+    function test_EndStake_RevertWhen_AlreadyEnded() public {
         uint40 blockTs = uint40(block.timestamp);
 
         fenix.startStake(fenix.balanceOf(bob), term);

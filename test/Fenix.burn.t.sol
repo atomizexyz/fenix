@@ -34,7 +34,7 @@ contract FenixBurnTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testXENBurn(uint256 amount) public {
+    function testFuzz_XENBurn(uint256 amount) public {
         deal({ token: address(xenCrypto), to: address(bob), give: amount });
 
         uint256 balancePreBurn = xenCrypto.balanceOf(bob);
@@ -43,27 +43,27 @@ contract FenixBurnTest is Test {
 
         uint256 balancePostBurn = xenCrypto.balanceOf(bob);
 
-        assertLe(amount / fenix.XEN_RATIO(), balancePostBurn);
+        assertLe(amount / fenix.XEN_BURN_RATIO(), balancePostBurn);
     }
 
-    /// @notice Test token burn and revert if wrong caller
-    function testTokenBurnRevertIfWrongCaller() public {
+    /// @notice Test token burn and revert when wrong caller
+    function test_TokenBurn_RevertWhen_WrongCaller() public {
         vm.expectRevert(abi.encodeWithSelector(FenixError.WrongCaller.selector, address(bob))); // verify
 
         vm.prank(address(bob));
         fenix.onTokenBurned(address(bob), 100);
     }
 
-    /// @notice Test token burn and revert if address is zero
-    function testTokenBurnRevertIfAddressZero() public {
+    /// @notice Test token burn and revert when address is zero
+    function test_TokenBurn_RevertWhen_AddressZero() public {
         vm.expectRevert(FenixError.AddressZero.selector); // verify
 
         vm.prank(address(xenCrypto));
         fenix.onTokenBurned(address(0), 100);
     }
 
-    /// @notice Test token burn and revert if balance is zero
-    function testTokenBurnRevertIfBalanceZero() public {
+    /// @notice Test token burn and revert when balance is zero
+    function test_TokenBurn_RevertWhen_BalanceZero() public {
         vm.expectRevert(FenixError.BalanceZero.selector); // verify
 
         vm.prank(address(xenCrypto));

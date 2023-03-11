@@ -23,7 +23,7 @@ contract FenixTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testMetadata() public {
+    function test_Metadata() public {
         assertEq(fenix.name(), "FENIX");
         assertEq(fenix.symbol(), "FENIX");
         assertEq(fenix.decimals(), 18);

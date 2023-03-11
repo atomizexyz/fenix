@@ -45,12 +45,12 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testReferralReward() public {
+    function test_ReferralReward() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
     }
 
     /// @notice Test that referral can be flushed to the stake pool
-    function testReferralRewardToStakePool() public {
+    function test_ReferralRewardToStakePool() public {
         uint256 skipWeeks = 3;
         uint256 startPoolSupply = fenix.equityPoolSupply();
 
@@ -65,7 +65,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward accumulating more referrals
-    function testReferralRewardAccumulatesMore() public {
+    function test_ReferralRewardAccumulatesMore() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
 
         helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
@@ -75,7 +75,7 @@ contract AdoptionRewardTest is Test {
     }
 
     /// @notice Test referral reward skipping a cooldown
-    function testReferralRewardSkipCooldown() public {
+    function test_ReferralRewardSkipCooldown() public {
         uint256 skipWeeks = 30;
         uint256 startPoolSupply = fenix.equityPoolSupply();
 
@@ -89,16 +89,16 @@ contract AdoptionRewardTest is Test {
         assertEq(fenix.cooldownUnlockTs(), 25401601); // verify
     }
 
-    /// @notice Test referral reward reverting if you try to claim too early
-    function testReferralRewardRevertIfTooEarly() public {
+    /// @notice Test referral reward reverting when you try to claim too early
+    function test_ReferralReward_RevertWhen_TooEarly() public {
         vm.warp(block.timestamp + 86_400);
 
         vm.expectRevert(FenixError.CooldownActive.selector); // verify
         fenix.flushRewardPool();
     }
 
-    /// @notice Test referral reward reverting if you try and claim more than once
-    function testReferralRewardRevertIfAlreadyClaimed() public {
+    /// @notice Test referral reward reverting when you try and claim more than once
+    function test_ReferralReward_RevertWhen_AlreadyClaimed() public {
         uint256 skipWeeks = 3;
 
         vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));

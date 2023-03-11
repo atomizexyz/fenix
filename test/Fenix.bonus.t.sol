@@ -24,7 +24,7 @@ contract BonusTest is Test {
     }
 
     /// @notice Test calculating bonus
-    function testCalcualteBonus() public {
+    function test_CalcualteBonus() public {
         uint256 amount = 1e18;
         uint256 term = 100;
 
@@ -33,7 +33,7 @@ contract BonusTest is Test {
     }
 
     /// @notice Test calculating large bonus
-    function testCalculateBonusLarge() public {
+    function test_CalculateBonusLarge() public {
         uint256 amount = 100_000_000e18;
         uint256 term = 100;
 
@@ -42,7 +42,7 @@ contract BonusTest is Test {
     }
 
     /// @notice Test calculating
-    function testCalculateBonusLtOne() public {
+    function test_CalculateBonusLessThanOne() public {
         uint256 amount = 1e17;
         uint256 term = 100;
 
@@ -51,13 +51,13 @@ contract BonusTest is Test {
     }
 
     /// @notice Test that size bonus will always return value greater than or equal to zero
-    function testCalculateSizeBonus(uint256 fuzzFenix) public {
+    function testFuzz_CalculateSizeBonus(uint256 fuzzFenix) public {
         uint256 bonus = fenix.calculateSizeBonus(fuzzFenix);
         assertGe(bonus, 0); // verify
     }
 
     /// @notice Test that time bonus will always return greater than zero
-    function testCalculateTimeBonus(uint256 fuzzTerm) public {
+    function testFuzz_CalculateTimeBonus(uint256 fuzzTerm) public {
         if (fuzzTerm > fenix.MAX_STAKE_LENGTH_DAYS()) {
             vm.expectRevert(FenixError.TermGreaterThanMax.selector); // verify
         }

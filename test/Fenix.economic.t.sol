@@ -47,7 +47,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test multiple stakes with symmetric split terms
-    function testMultipleStakesSymmetricTerm() public {
+    function test_MultipleStakesSymmetricTerm() public {
         uint256 bobFenixBalance = fenix.balanceOf(bob);
         vm.prank(bob);
         fenix.startStake(bobFenixBalance, term);
@@ -77,7 +77,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test multiple stakes with assymetric terms
-    function testMultipleStakesAssymetricTerm() public {
+    function test_MultipleStakesAssymetricTerm() public {
         uint256 bobTerm = 100;
         uint256 aliceTerm = 1000;
 
@@ -115,7 +115,7 @@ contract FenixEconomicTest is Test {
         assertEq(fenix.stakeCount(alice), 1);
     }
 
-    function testMultipleStakesWealthRedistribution() public {
+    function test_MultipleStakesWealthRedistribution() public {
         uint40 blockTs = uint40(block.timestamp);
 
         for (uint256 i = 0; i < stakers.length; i++) {
@@ -157,7 +157,7 @@ contract FenixEconomicTest is Test {
         assertEq(fenix.equityPoolSupply(), 0);
     }
 
-    function testOneDayVsMaxTerm() public {
+    function test_OneDayVsMaxTerm() public {
         uint256 bobTerm = 1;
         uint256 aliceTerm = fenix.MAX_STAKE_LENGTH_DAYS();
 
@@ -196,7 +196,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test pays better always
-    function testTimePaysBetter(uint256 fuzzTerm) public {
+    function testFuzz_TimePaysBetter(uint256 fuzzTerm) public {
         if (fuzzTerm > 0 || fuzzTerm < fenix.MAX_STAKE_LENGTH_DAYS()) return;
         uint40 blockTs = uint40(block.timestamp);
         uint256 maxTerm = fenix.MAX_STAKE_LENGTH_DAYS();
@@ -222,7 +222,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test 630 years of stakes
-    function testTwoThousandYearsOfStakes() public {
+    function test_TwoThousandYearsOfStakes() public {
         // You must go through the proof of burn process to ensure correct supply on FENIX
         uint256 xenMaxSupply = 545_638_549_388_136e18; // XEN max supply
         deal({ token: address(xenCrypto), to: bob, give: xenMaxSupply });
@@ -249,7 +249,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test inlfation rate payout
-    function testInflationRate() public {
+    function test_InflationRate() public {
         uint256 oneYearTerm = 365;
         uint40 blockTs = uint40(block.timestamp);
 
@@ -276,7 +276,7 @@ contract FenixEconomicTest is Test {
     }
 
     /// @notice Test minimum stake term return vs max term
-    function testMinimumStakeTermVsMax() public {
+    function test_MinimumStakeTermVsMax() public {
         uint256 bobTerm = 1;
         uint256 aliceTerm = fenix.MAX_STAKE_LENGTH_DAYS();
         uint40 blockTs = uint40(block.timestamp);

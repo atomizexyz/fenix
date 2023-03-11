@@ -35,7 +35,7 @@ contract FenixShareTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testShareRateUpdate() public {
+    function test_ShareRateUpdate() public {
         uint256 term = 3650;
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -49,7 +49,7 @@ contract FenixShareTest is Test {
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function testShortVsLongShareUpdate() public {
+    function test_ShortVsLongShareUpdate() public {
         uint256 shortTerm = 1;
         uint256 longTerm = 4;
 
@@ -85,7 +85,7 @@ contract FenixShareTest is Test {
     }
 
     /// @notice Test that shares will also return great than zero
-    function testCalculateShares(uint256 fuzzShares) public {
+    function testFuzz_CalculateShares(uint256 fuzzShares) public {
         uint256 shares = fenix.calculateShares(fuzzShares);
         assertGe(shares, 0); // verify
     }

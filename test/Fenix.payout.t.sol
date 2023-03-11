@@ -33,7 +33,7 @@ contract FenixPayoutTest is Test {
     }
 
     /// @notice Test stake payout
-    function testCalculateEarlyPayout() public {
+    function test_CalculateEarlyPayout() public {
         uint256 amount = 21e18;
 
         uint256 shares = fenix.calculateBonus(amount, 356);
@@ -62,7 +62,7 @@ contract FenixPayoutTest is Test {
         assertEq(reward100, 1000000000000000000); // verify 100% reward
     }
 
-    function testCalculateEarlyPayoutRevertIfStakeNotStarted() public {
+    function test_CalculateEarlyPayout_RevertWhen_StakeNotStarted() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
@@ -75,7 +75,7 @@ contract FenixPayoutTest is Test {
         fenix.calculateEarlyPayout(stake1);
     }
 
-    function testCalculateEarlyPayoutRevertIfStakeEnded() public {
+    function test_CalculateEarlyPayout_RevertWhen_StakeEnded() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         vm.warp(blockTs + (86400 * 10));
@@ -88,7 +88,7 @@ contract FenixPayoutTest is Test {
         fenix.calculateEarlyPayout(stake1);
     }
 
-    function testCalculateLatePayout() public {
+    function test_CalculateLatePayout() public {
         uint256 base = 13.81551 * 1e18;
         uint256 bonus = 2.77069 * 1e18;
         uint256 baseTerm = 100;
@@ -117,7 +117,7 @@ contract FenixPayoutTest is Test {
         assertEq(reward200, 0); // verify 0% reward
     }
 
-    function testCalculateLatePayoutRevertIfStakeNotStarted() public {
+    function test_CalculateLatePayout_RevertWhen_StakeNotStarted() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
@@ -128,7 +128,7 @@ contract FenixPayoutTest is Test {
         fenix.calculateLatePayout(stake1);
     }
 
-    function testCalculateLatePayoutRevertIfStakeNotEnded() public {
+    function test_CalculateLatePayout_RevertWhen_StakeNotEnded() public {
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
 
         Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);

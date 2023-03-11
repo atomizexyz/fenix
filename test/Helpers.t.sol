@@ -9,6 +9,7 @@ import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 contract HelpersTest is Test {
     uint256 public xenDeployerPrivateKey = 0x31c354f57fc542eba2c56699286723e94f7bd02a4891a0a7f68566c2a2df6795;
 
+    /// @notice Genreate fenix for users from XEN using proof of burn
     function getFenixFor(address[] memory users, Fenix fenix, XENCrypto xenCrypto) public {
         for (uint256 i = 0; i < users.length; i++) {
             address userAddress = address(users[i]);
@@ -23,6 +24,7 @@ contract HelpersTest is Test {
         }
     }
 
+    /// @notice Deal XEN to users
     function batchDealTo(address[] memory users, uint256 amount, address token) public {
         for (uint256 i = 0; i < users.length; i++) {
             address userAddress = address(users[i]);
@@ -30,6 +32,7 @@ contract HelpersTest is Test {
         }
     }
 
+    /// @notice Print stake
     function printStake(Stake memory stake) public view {
         console.log("status: ", uint8(stake.status));
         console.log("startTs: ", stake.startTs);
