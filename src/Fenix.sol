@@ -17,7 +17,7 @@ pragma solidity ^0.8.19;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
+import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -100,7 +100,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    address public constant XEN_ADDRESS = 0xD342D63466B520d8D331CaFF863900d402Aa5b00;
 
     uint256 public constant XEN_BURN_RATIO = 10_000;
 

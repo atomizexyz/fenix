@@ -91,6 +91,25 @@ yarn lint
 | symbol                       | 3263            | 3263   | 3263   | 3263   | 1       |
 | totalSupply                  | 360             | 1360   | 1360   | 2360   | 4       |
 
+## Deployment Checklist
+
+- [ ] Update address in Fenix.sol to point to XEN contract address
+- [ ] Run `./script/deployProdFENIX.sh`
+
+```sh
+# EIP-1559
+forge script script/FenixProd.s.sol:FenixProdScript --rpc-url $RPC_URL
+
+# NON EIP-1559
+forge script script/FenixProd.s.sol:FenixProdScript --rpc-url $RPC_URL --legacy
+```
+
+```
+forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $GOERLI_RPC_URL --broadcast -vvvv
+forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $MUMBAI_RPC_URL --broadcast -vvvv
+forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $X1_RPC_URL --legacy --broadcast -vvvv
+```
+
 ## Acknowledgements
 
 - [Bitcoin](https://github.com/bitcoin/bitcoin) (Jan 8, 2009) — Censorship resistant zero counter party risk value
