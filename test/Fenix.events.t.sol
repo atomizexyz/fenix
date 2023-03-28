@@ -43,6 +43,14 @@ contract FenixTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
+    function test_XENBurnedEvent() public {
+        vm.expectEmit(true, true, false, false);
+        emit FenixEvent.BurnXEN(address(bob), 100000_000000000000000000);
+
+        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
+        helper.getFenixFor(stakers, fenix, xenCrypto);
+    }
+
     /// @notice Test that the start stake event is emitted
     function test_StartStakeEvent() public {
         Stake memory verifyStake = Stake(

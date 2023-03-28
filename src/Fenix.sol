@@ -73,6 +73,12 @@ library FenixEvent {
     /// @dev Share rate has been updated
     /// @param _shareRate the new share rate
     event UpdateShareRate(uint256 indexed _shareRate);
+
+    /// @notice XEN has been burned
+    /// @dev XEN has been burned
+    /// @param _userAddress the address of user burning XEN
+    /// @param _amount the amount of XEN being burned
+    event BurnXEN(address indexed _userAddress, uint256 indexed _amount);
 }
 
 ///----------------------------------------------------------------------------------------------------------------
@@ -166,6 +172,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param xen the amount of XEN to burn from the current wallet address
     function burnXEN(uint256 xen) public {
         IBurnableToken(XEN_ADDRESS).burn(_msgSender(), xen);
+        emit FenixEvent.BurnXEN(_msgSender(), xen);
     }
 
     /// @notice Starts a stake
