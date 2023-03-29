@@ -345,8 +345,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
         if (block.timestamp < stake.endTs) revert FenixError.StakeNotEnded();
 
-        uint256 lateTs = uint40(block.timestamp) - stake.endTs;
-
+        uint256 lateTs = block.timestamp - stake.endTs;
         if (lateTs > ONE_EIGHTY_DAYS_TS) return 0;
 
         UD60x18 penalty = ud(lateTs).div(ud(ONE_EIGHTY_DAYS_TS)).powu(3);
