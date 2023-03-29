@@ -118,7 +118,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     uint256 internal constant REWARD_COOLDOWN_TS = 7_862_400; // 86_400 * 7 * 13  (13 weeks)
     uint256 internal constant REWARD_LAUNCH_COOLDOWN_TS = 1_814_400; // 86_400 * 7 * 3 (3 weeks)
 
-    UD60x18 public constant ANNUAL_INFLATION_RATE = UD60x18.wrap(1_618033988749894848);
+    UD60x18 public constant ANNUAL_INFLATION_RATE = UD60x18.wrap(0.016180339887498948e18);
     UD60x18 internal constant ONE = UD60x18.wrap(1e18);
     UD60x18 internal constant ONE_YEAR_DAYS = UD60x18.wrap(365);
 
@@ -130,7 +130,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     uint256 public cooldownUnlockTs;
     uint256 public rewardPoolSupply = 0;
 
-    uint256 public shareRate = 1e18;
+    uint256 public shareRate = 0;
 
     uint256 public equityPoolSupply = 0;
     uint256 public equityPoolTotalShares = 0;
@@ -191,13 +191,14 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         uint256 shares = calculateShares(bonus);
 
         UD60x18 time = ud(term).div(ONE_YEAR_DAYS);
-        uint256 inflatedSupply = unwrap(ud(fenix).mul(ANNUAL_INFLATION_RATE.mul(time)));
-        uint256 newEquity = fenix + inflatedSupply;
+        uint256 inflatedSupply = unwrap(ud(fenix).mul((ONE.add(ANNUAL_INFLATION_RATE)).pow(time)));
 
-        equityPoolSupply += newEquity;
-        equityPoolTotalShares += shares;
+        uint256 newShares = unwrap(ud(shares).mul(ud(inflatedSupply)));
 
-        Stake memory _stake = Stake(Status.ACTIVE, startTs, 0, endTs, uint16(term), fenix, shares, 0);
+        equityPoolSupply += inflatedSupply;
+        equityPoolTotalShares += newShares;
+
+        Stake memory _stake = Stake(Status.ACTIVE, startTs, 0, endTs, uint16(term), fenix, newShares, 0);
         stakes[_msgSender()].push(_stake);
 
         _burn(_msgSender(), fenix);
@@ -224,8 +225,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
             rewardPercent = ud(calculateEarlyPayout(_stake));
         }
 
-        UD60x18 stakeShares = ud(_stake.shares);
-        UD60x18 poolSharePercent = stakeShares.div(ud(equityPoolTotalShares));
+        UD60x18 poolSharePercent = ud(_stake.shares).div(ud(equityPoolTotalShares));
         UD60x18 stakerPoolSupplyPercent = poolSharePercent.mul(rewardPercent);
 
         uint256 equitySupply = unwrap(ud(equityPoolSupply).mul(stakerPoolSupplyPercent));
@@ -320,6 +320,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param bonus the bonus to calculate the shares from
     /// @return shares the number of shares to be issued to the staker
     function calculateShares(uint256 bonus) public view returns (uint256) {
+        if (shareRate == 0) return bonus;
         UD60x18 shares = ud(bonus).div(ud(shareRate));
         return unwrap(shares);
     }

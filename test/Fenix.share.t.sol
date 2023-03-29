@@ -16,7 +16,7 @@ contract FenixShareTest is Test {
     address internal alice = vm.addr(1);
 
     address[] internal stakers;
-    uint256 internal tenKXen = 100_000e18;
+    uint256 internal tenMillionXen = 10_000_000e18;
 
     /// ============ Setup test suite ============
 
@@ -30,21 +30,37 @@ contract FenixShareTest is Test {
         stakers.push(bob);
         stakers.push(alice);
 
-        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
+        helper.batchDealTo(stakers, tenMillionXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
     /// @notice Test that the contract can be deployed successfully
-    function test_ShareRateUpdate() public {
-        uint256 term = 3650;
+    function test_ShareRateUpdate_OneYear() public {
+        uint256 term = 365;
+
+        assertEq(fenix.shareRate(), 0); // verify
 
         fenix.startStake(fenix.balanceOf(bob), term);
 
         vm.warp(block.timestamp + (86_400 * term));
         fenix.endStake(0);
 
-        assertGt(fenix.shareRate(), 1e18); // verify
-        assertEq(fenix.shareRate(), 17_180339887498948480); // verify
+        assertEq(fenix.shareRate(), 1_016180339887498948); // verify
+        assertEq(fenix.equityPoolSupply(), 0); // verify
+    }
+
+    /// @notice Test that the contract can be deployed successfully
+    function test_ShareRateUpdate_TenYears() public {
+        uint256 term = 3650;
+
+        assertEq(fenix.shareRate(), 0); // verify
+
+        fenix.startStake(fenix.balanceOf(bob), term);
+
+        vm.warp(block.timestamp + (86_400 * term));
+        fenix.endStake(0);
+
+        assertEq(fenix.shareRate(), 1_174107556871426200); // verify
         assertEq(fenix.equityPoolSupply(), 0); // verify
     }
 

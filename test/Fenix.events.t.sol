@@ -60,7 +60,7 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            24_78579958393365129,
+            24_895034858800962760,
             0
         );
 
@@ -82,8 +82,8 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            24_78579958393365129,
-            14_432969832191492720
+            24_895034858800962760,
+            10_044071717152961500
         );
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -108,8 +108,8 @@ contract FenixTest is Test {
             8640001,
             uint16(term),
             10_000000000000000000,
-            24_78579958393365129,
-            14_432969832191492720
+            24_895034858800962760,
+            10_044071717152961500
         );
 
         fenix.startStake(fenix.balanceOf(bob), term);
@@ -145,7 +145,7 @@ contract FenixTest is Test {
         vm.warp(blockTs + (86_400 * oneYearTerm));
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.UpdateShareRate(2_618033988749894848);
+        emit FenixEvent.UpdateShareRate(1_016180339887498948);
 
         fenix.endStake(0);
         // console.log(fenix.shareRate());

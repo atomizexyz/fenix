@@ -34,6 +34,7 @@ contract HelpersTest is Test {
 
     /// @notice Print stake
     function printStake(Stake memory stake) public view {
+        console.log("--- STAKE START ---");
         console.log("status: ", uint8(stake.status));
         console.log("startTs: ", stake.startTs);
         console.log("deferralTs: ", stake.deferralTs);
@@ -42,5 +43,6 @@ contract HelpersTest is Test {
         console.log("fenix: ", stake.fenix);
         console.log("shares: ", stake.shares);
         console.log("payout: ", stake.payout);
+        console.log("---- STAKE END ----");
     }
 }
