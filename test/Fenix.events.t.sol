@@ -17,7 +17,7 @@ contract FenixTest is Test {
     address[] internal stakers;
 
     uint256 internal term = 100;
-    uint256 internal tenKXen = 100_000e18;
+    uint256 internal oneHundredKXen = 100_000e18;
 
     /// ============ Setup test suite ============
 
@@ -30,7 +30,7 @@ contract FenixTest is Test {
 
         stakers.push(bob);
 
-        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
+        helper.batchDealTo(stakers, oneHundredKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -39,7 +39,7 @@ contract FenixTest is Test {
         vm.expectEmit(true, true, false, false);
         emit FenixEvent.MintFenix(address(bob), 10_000000000000000000);
 
-        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
+        helper.batchDealTo(stakers, oneHundredKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
@@ -47,7 +47,7 @@ contract FenixTest is Test {
         vm.expectEmit(true, true, false, false);
         emit FenixEvent.BurnXEN(address(bob), 100000_000000000000000000);
 
-        helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
+        helper.batchDealTo(stakers, oneHundredKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
