@@ -38,8 +38,11 @@ contract FenixPayoutTest is Test {
 
         uint256 shares = fenix.calculateBonus(amount, 356);
 
+        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp);
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, amount, shares, 0);
+        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), amount, shares, 0);
 
         vm.warp(blockTs + (86400 * 0));
         uint256 reward0 = fenix.calculateEarlyPayout(stake1);
@@ -63,11 +66,13 @@ contract FenixPayoutTest is Test {
     }
 
     function test_CalculateEarlyPayout_RevertWhen_StakeNotStarted() public {
+        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
 
         vm.warp(blockTs + (86400 * 10));
 
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, 100, 100, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
 
         vm.warp(blockTs - 86400);
 
@@ -76,11 +81,12 @@ contract FenixPayoutTest is Test {
     }
 
     function test_CalculateEarlyPayout_RevertWhen_StakeEnded() public {
+        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+        uint40 endTs = uint40(blockTs + (86400 * 10));
+        vm.warp(blockTs + (86400 * baseTerm));
 
-        vm.warp(blockTs + (86400 * 10));
-
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, 100, 100, 100, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
 
         vm.warp(blockTs + (86400 * 101));
 
@@ -89,12 +95,16 @@ contract FenixPayoutTest is Test {
     }
 
     function test_CalculateLatePayout() public {
-        uint256 base = 13.81551 * 1e18;
-        uint256 bonus = 2.77069 * 1e18;
         uint256 baseTerm = 100;
 
+        uint256 FENIX = 20_000e18;
+        uint256 bonus = fenix.calculateBonus(FENIX, baseTerm);
+        uint256 shares = fenix.calculateShares(bonus);
+
         uint40 blockTs = uint40(block.timestamp);
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, uint16(baseTerm), base, base + bonus, 0);
+        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
+
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), FENIX, shares, 0);
 
         vm.warp(blockTs + (86400 * baseTerm));
         uint256 reward0 = fenix.calculateLatePayout(stake1);
@@ -118,9 +128,11 @@ contract FenixPayoutTest is Test {
     }
 
     function test_CalculateLatePayout_RevertWhen_StakeNotStarted() public {
+        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
 
-        Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
 
         vm.warp(blockTs - 86400);
 
@@ -129,9 +141,11 @@ contract FenixPayoutTest is Test {
     }
 
     function test_CalculateLatePayout_RevertWhen_StakeNotEnded() public {
+        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp + (86400 * 10));
+        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
 
-        Stake memory stake1 = Stake(Status.ACTIVE, uint40(blockTs), 0, 100, 100, 100, 0);
+        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
 
         vm.warp(blockTs + 86400);
 

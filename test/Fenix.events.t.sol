@@ -57,6 +57,7 @@ contract FenixTest is Test {
             Status.ACTIVE,
             1,
             0,
+            8640001,
             uint16(term),
             10_000000000000000000,
             24_78579958393365129,
@@ -77,6 +78,7 @@ contract FenixTest is Test {
         Stake memory verifyDeferral = Stake(
             Status.DEFER,
             1,
+            8640001,
             8640001,
             uint16(term),
             10_000000000000000000,
@@ -102,6 +104,7 @@ contract FenixTest is Test {
         Stake memory verifyEnd = Stake(
             Status.END,
             1,
+            8640001,
             8640001,
             uint16(term),
             10_000000000000000000,

@@ -34,6 +34,7 @@ struct Stake {
     Status status;
     uint40 startTs;
     uint40 deferralTs;
+    uint40 endTs;
     uint16 term;
     uint256 fenix;
     uint256 shares;
@@ -182,6 +183,10 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     function startStake(uint256 fenix, uint256 term) public {
         if (fenix == 0) revert FenixError.BalanceZero();
         if (term == 0) revert FenixError.TermZero();
+
+        uint40 startTs = uint40(block.timestamp);
+        uint40 endTs = uint40(block.timestamp + (term * ONE_DAY_TS));
+
         uint256 bonus = calculateBonus(fenix, term);
         uint256 shares = calculateShares(bonus);
 
@@ -192,7 +197,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         equityPoolSupply += newEquity;
         equityPoolTotalShares += shares;
 
-        Stake memory _stake = Stake(Status.ACTIVE, uint40(block.timestamp), 0, uint16(term), fenix, shares, 0);
+        Stake memory _stake = Stake(Status.ACTIVE, startTs, 0, endTs, uint16(term), fenix, shares, 0);
         stakes[_msgSender()].push(_stake);
 
         _burn(_msgSender(), fenix);
@@ -208,12 +213,12 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         Stake memory _stake = stakes[stakerAddress][stakeIndex];
 
         if (_stake.status != Status.ACTIVE) return;
-        uint256 endTs = _stake.startTs + (_stake.term * ONE_DAY_TS);
 
-        if (block.timestamp < endTs && _msgSender() != stakerAddress) revert FenixError.WrongCaller(_msgSender());
+        if (block.timestamp < _stake.endTs && _msgSender() != stakerAddress)
+            revert FenixError.WrongCaller(_msgSender());
 
         UD60x18 rewardPercent = ZERO;
-        if (block.timestamp > endTs) {
+        if (block.timestamp > _stake.endTs) {
             rewardPercent = ud(calculateLatePayout(_stake));
         } else {
             rewardPercent = ud(calculateEarlyPayout(_stake));
@@ -229,6 +234,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
             Status.DEFER,
             _stake.startTs,
             uint40(block.timestamp),
+            _stake.endTs,
             _stake.term,
             _stake.fenix,
             _stake.shares,
@@ -266,6 +272,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
             Status.END,
             _stake.startTs,
             _stake.deferralTs,
+            _stake.endTs,
             _stake.term,
             _stake.fenix,
             _stake.shares,
@@ -322,9 +329,8 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param stake the stake to calculate the penalty for
     /// @return reward the reward percentage for the stake
     function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
-        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_TS);
         if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
-        if (block.timestamp > endTs) revert FenixError.StakeEnded();
+        if (block.timestamp > stake.endTs) revert FenixError.StakeEnded();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_TS;
         UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
@@ -336,11 +342,10 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param stake a parameter just like in doxygen (must be followed by parameter name)
     /// @return reward the reward percentage for the stake
     function calculateLatePayout(Stake memory stake) public view returns (uint256) {
-        uint256 endTs = stake.startTs + (stake.term * ONE_DAY_TS);
         if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
-        if (block.timestamp < endTs) revert FenixError.StakeNotEnded();
+        if (block.timestamp < stake.endTs) revert FenixError.StakeNotEnded();
 
-        uint256 lateTs = block.timestamp - endTs;
+        uint256 lateTs = uint40(block.timestamp) - stake.endTs;
 
         if (lateTs > ONE_EIGHTY_DAYS_TS) return 0;
 

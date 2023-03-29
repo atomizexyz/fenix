@@ -37,6 +37,7 @@ contract HelpersTest is Test {
         console.log("status: ", uint8(stake.status));
         console.log("startTs: ", stake.startTs);
         console.log("deferralTs: ", stake.deferralTs);
+        console.log("endTs: ", stake.endTs);
         console.log("term: ", stake.term);
         console.log("fenix: ", stake.fenix);
         console.log("shares: ", stake.shares);
