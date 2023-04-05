@@ -286,7 +286,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     }
 
     /// @notice Calculate bonus
-    /// @dev Use fenix amount and term to calcualte size and time bonus used for pool equity stake
+    /// @dev Use fenix amount and term to calculate size and time bonus used for pool equity stake
     /// @param fenix the amount of fenix used to calculate the equity stake
     /// @param term the term of the stake in days used to calculate the pool equity stake
     /// @return bonus the bonus for pool equity stake
@@ -326,7 +326,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         return unwrap(shares);
     }
 
-    /// @notice Calcualte the early end stake penalty
+    /// @notice Calculate the early end stake penalty
     /// @dev Calculates the early end stake penality to be split between the pool and the staker
     /// @param stake the stake to calculate the penalty for
     /// @return reward the reward percentage for the stake
