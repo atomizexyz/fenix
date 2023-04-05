@@ -217,7 +217,7 @@ contract FenixStakeTest is Test {
 
         vm.warp(blockTs + (86400 * term));
 
-        vm.expectRevert(FenixError.StakeNotStarted.selector); // verify
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
         vm.prank(chad);
         fenix.endStake(0);
 

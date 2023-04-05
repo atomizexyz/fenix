@@ -91,9 +91,10 @@ library FenixError {
     error BalanceZero();
     error TermZero();
     error TermGreaterThanMax();
-    error StakeNotStarted();
+    error StakeNotActive();
     error StakeNotEnded();
     error StakeEnded();
+    error StakeLate();
     error CooldownActive();
     error StakeStatusAlreadySet(Status status);
 }
@@ -210,7 +211,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param stakeIndex the index of the stake to defer
     /// @param stakerAddress the address of the stake owner that will be deferred
     function deferStake(uint256 stakeIndex, address stakerAddress) public {
-        if (stakes[stakerAddress].length <= stakeIndex) revert FenixError.StakeNotStarted();
+        if (stakes[stakerAddress].length <= stakeIndex) revert FenixError.StakeNotActive();
         Stake memory _stake = stakes[stakerAddress][stakeIndex];
 
         if (_stake.status != Status.ACTIVE) return;
@@ -330,8 +331,8 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param stake the stake to calculate the penalty for
     /// @return reward the reward percentage for the stake
     function calculateEarlyPayout(Stake memory stake) public view returns (uint256) {
-        if (block.timestamp < stake.startTs && stake.status == Status.ACTIVE) revert FenixError.StakeNotStarted();
-        if (block.timestamp > stake.endTs) revert FenixError.StakeEnded();
+        if (block.timestamp < stake.startTs || stake.status != Status.ACTIVE) revert FenixError.StakeNotActive();
+        if (block.timestamp > stake.endTs) revert FenixError.StakeLate();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_TS;
         UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
@@ -343,7 +344,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param stake a parameter just like in doxygen (must be followed by parameter name)
     /// @return reward the reward percentage for the stake
     function calculateLatePayout(Stake memory stake) public view returns (uint256) {
-        if (block.timestamp < stake.startTs) revert FenixError.StakeNotStarted();
+        if (block.timestamp < stake.startTs || stake.status != Status.ACTIVE) revert FenixError.StakeNotActive();
         if (block.timestamp < stake.endTs) revert FenixError.StakeNotEnded();
 
         uint256 lateTs = block.timestamp - stake.endTs;

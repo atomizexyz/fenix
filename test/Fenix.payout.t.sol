@@ -16,6 +16,9 @@ contract FenixPayoutTest is Test {
 
     address[] internal stakers;
     uint256 internal tenKXen = 100_000e18;
+    uint256 baseTerm = 100;
+    uint40 calcBlockTs;
+    uint40 endBlockTs;
 
     /// ============ Setup test suite ============
 
@@ -30,6 +33,9 @@ contract FenixPayoutTest is Test {
 
         helper.batchDealTo(stakers, tenKXen, address(xenCrypto));
         helper.getFenixFor(stakers, fenix, xenCrypto);
+
+        calcBlockTs = uint40(block.timestamp + (86400 * 10));
+        endBlockTs = uint40(calcBlockTs + (86400 * baseTerm));
     }
 
     /// @notice Test stake payout
@@ -38,7 +44,6 @@ contract FenixPayoutTest is Test {
 
         uint256 shares = fenix.calculateBonus(amount, 356);
 
-        uint256 baseTerm = 100;
         uint40 blockTs = uint40(block.timestamp);
         uint40 endTs = uint40(blockTs + (86400 * baseTerm));
 
@@ -65,38 +70,7 @@ contract FenixPayoutTest is Test {
         assertEq(reward100, 1000000000000000000); // verify 100% reward
     }
 
-    function test_CalculateEarlyPayout_RevertWhen_StakeNotStarted() public {
-        uint256 baseTerm = 100;
-        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
-        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
-
-        vm.warp(blockTs + (86400 * 10));
-
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
-
-        vm.warp(blockTs - 86400);
-
-        vm.expectRevert(FenixError.StakeNotStarted.selector); // verify
-        fenix.calculateEarlyPayout(stake1);
-    }
-
-    function test_CalculateEarlyPayout_RevertWhen_StakeEnded() public {
-        uint256 baseTerm = 100;
-        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
-        uint40 endTs = uint40(blockTs + (86400 * 10));
-        vm.warp(blockTs + (86400 * baseTerm));
-
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
-
-        vm.warp(blockTs + (86400 * 101));
-
-        vm.expectRevert(FenixError.StakeEnded.selector); // verify
-        fenix.calculateEarlyPayout(stake1);
-    }
-
     function test_CalculateLatePayout() public {
-        uint256 baseTerm = 100;
-
         uint256 FENIX = 20_000e18;
         uint256 bonus = fenix.calculateBonus(FENIX, baseTerm);
         uint256 shares = fenix.calculateShares(bonus);
@@ -127,29 +101,151 @@ contract FenixPayoutTest is Test {
         assertEq(reward200, 0); // verify 0% reward
     }
 
-    function test_CalculateLatePayout_RevertWhen_StakeNotStarted() public {
-        uint256 baseTerm = 100;
-        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
-        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
+    /// ---------- EARLY PAYOUT ----------
 
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
+    /// @notice Test the calculateEarlyPayout function when the stake is active and the calculation block is before the term
+    function test_CalculateEarlyPayout_Active_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
 
-        vm.warp(blockTs - 86400);
+    /// @notice Test the calculateEarlyPayout function when the stake is active and the calculation block is during the term
+    function test_CalculateEarlyPayout_Active_DuringTs() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
+        uint256 payout = fenix.calculateEarlyPayout(stake1);
+        assertEq(payout, 13395); // verify
+    }
 
-        vm.expectRevert(FenixError.StakeNotStarted.selector); // verify
+    /// @notice Test the calculateEarlyPayout function when the stake is active and the calculation block is after the term
+    function test_CalculateEarlyPayout_Active_AfterTs_RevertWhen_StakeLate() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        vm.expectRevert(FenixError.StakeLate.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is defer and the calculation block is before the term
+    function test_CalculateEarlyPayout_Defer_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is defer and the calculation block is during the term
+    function test_CalculateEarlyPayout_Defer_DuringTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is defer and the calculation block is after the term
+    function test_CalculateEarlyPayout_Defer_AfterTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is end and the calculation block is before the term
+    function test_CalculateEarlyPayout_End_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is end and the calculation block is during the term
+    function test_CalculateEarlyPayout_End_DuringTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// @notice Test the calculateEarlyPayout function when the stake is end and the calculation block is after the term
+    function test_CalculateEarlyPayout_End_AfterTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateEarlyPayout(stake1);
+    }
+
+    /// ---------- LATE PAYOUT ----------
+
+    /// @notice Test the calculateLatePayout function when the stake is active and the calculation block is before the term
+    function test_CalculateLatePayout_Active_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
         fenix.calculateLatePayout(stake1);
     }
 
-    function test_CalculateLatePayout_RevertWhen_StakeNotEnded() public {
-        uint256 baseTerm = 100;
-        uint40 blockTs = uint40(block.timestamp + (86400 * 10));
-        uint40 endTs = uint40(blockTs + (86400 * baseTerm));
-
-        Stake memory stake1 = Stake(Status.ACTIVE, blockTs, 0, endTs, uint16(baseTerm), 100, 100, 0);
-
-        vm.warp(blockTs + 86400);
-
+    /// @notice Test the calculateLatePayout function when the stake is active and the calculation block is during the term
+    function test_CalculateLatePayout_Active_DuringTs_RevertWhen_StakeNotEnded() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
         vm.expectRevert(FenixError.StakeNotEnded.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is active and the calculation block is after the term
+    function test_CalculateLatePayout_Active_AfterTs() public {
+        Stake memory stake1 = Stake(Status.ACTIVE, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        uint256 payout = fenix.calculateLatePayout(stake1);
+        assertEq(payout, 1_000000000000000000); // verify
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is defer and the calculation block is before the term
+    function test_CalculateLatePayout_Defer_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is defer and the calculation block is during the term
+    function test_CalculateLatePayout_Defer_DuringTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is defer and the calculation block is after the term
+    function test_CalculateLatePayout_Defer_AfterTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.DEFER, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is end and the calculation block is before the term
+    function test_CalculateLatePayout_End_BeforeTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs - 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is end and the calculation block is during the term
+    function test_CalculateLatePayout_End_DuringTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
+        fenix.calculateLatePayout(stake1);
+    }
+
+    /// @notice Test the calculateLatePayout function when the stake is end and the calculation block is after the term
+    function test_CalculateLatePayout_End_AfterTs_RevertWhen_StakeNotActive() public {
+        Stake memory stake1 = Stake(Status.END, calcBlockTs, 0, endBlockTs, uint16(baseTerm), 100, 100, 0);
+        vm.warp(calcBlockTs + (86400 * baseTerm) + 1);
+        vm.expectRevert(FenixError.StakeNotActive.selector); // verify
         fenix.calculateLatePayout(stake1);
     }
 }
