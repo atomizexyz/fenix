@@ -19,7 +19,6 @@ pragma solidity ^0.8.17;
 
 import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
@@ -90,7 +89,7 @@ library FenixError {
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
-contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
+contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     ///----------------------------------------------------------------------------------------------------------------
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
