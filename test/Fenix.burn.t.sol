@@ -69,4 +69,9 @@ contract FenixBurnTest is Test {
         vm.prank(address(xenCrypto));
         fenix.onTokenBurned(address(bob), 0);
     }
+
+    function test_SupportsInterface() public {
+        assertTrue(fenix.supportsInterface(0x01ffc9a7));
+        assertFalse(fenix.supportsInterface(0xffffffff));
+    }
 }

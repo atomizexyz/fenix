@@ -151,7 +151,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @dev Evaluate if the contract supports burning tokens
     /// @param interfaceId the interface to evaluate
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IBurnRedeemable).interfaceId;
+        return interfaceId == type(IBurnRedeemable).interfaceId || interfaceId == this.supportsInterface.selector;
     }
 
     /// @notice Mint FENIX tokens
