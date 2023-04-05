@@ -244,7 +244,6 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         Stake memory _stake = stakes[_msgSender()][stakeIndex];
         if (_stake.status == Status.END) revert FenixError.StakeStatusAlreadySet(Status.END);
 
-        emit FenixEvent.EndStake(_stake);
         _mint(_msgSender(), _stake.payout);
 
         uint256 returnOnStake = unwrap(ud(_stake.payout).div(ud(_stake.fenix)));
@@ -266,7 +265,6 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         );
 
         stakes[_msgSender()][stakeIndex] = endedStake;
-
         emit FenixEvent.EndStake(endedStake);
     }
 
