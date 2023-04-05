@@ -45,12 +45,6 @@ struct Stake {
 /// Events
 ///----------------------------------------------------------------------------------------------------------------
 library FenixEvent {
-    /// @notice New FENIX tokens have been minted
-    /// @dev XEN proof of burn smart contract burns XEN tokens and mints FENIX tokens
-    /// @param _userAddress the address of the staker to mint FENIX tokens for
-    /// @param _amount the amount of FENIX tokens to mint
-    event MintFenix(address indexed _userAddress, uint256 indexed _amount);
-
     /// @notice Stake has been started
     /// @dev Size and Time bonus have been calculated to burn FENIX in exchnge for equity to start stake
     /// @param _stake the stake object
@@ -74,12 +68,6 @@ library FenixEvent {
     /// @dev Share rate has been updated
     /// @param _shareRate the new share rate
     event UpdateShareRate(uint256 indexed _shareRate);
-
-    /// @notice XEN has been burned
-    /// @dev XEN has been burned
-    /// @param _userAddress the address of user burning XEN
-    /// @param _amount the amount of XEN being burned
-    event BurnXEN(address indexed _userAddress, uint256 indexed _amount);
 }
 
 ///----------------------------------------------------------------------------------------------------------------
@@ -93,7 +81,6 @@ library FenixError {
     error TermGreaterThanMax();
     error StakeNotActive();
     error StakeNotEnded();
-    error StakeEnded();
     error StakeLate();
     error CooldownActive();
     error StakeStatusAlreadySet(Status status);
@@ -166,7 +153,7 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         uint256 fenix = amount / XEN_BURN_RATIO;
         rewardPoolSupply += fenix;
         _mint(user, fenix);
-        emit FenixEvent.MintFenix(user, fenix);
+        emit Redeemed(user, XEN_ADDRESS, address(this), amount, fenix);
     }
 
     /// @notice Burn XEN tokens
@@ -174,7 +161,6 @@ contract Fenix is Context, IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param xen the amount of XEN to burn from the current wallet address
     function burnXEN(uint256 xen) public {
         IBurnableToken(XEN_ADDRESS).burn(_msgSender(), xen);
-        emit FenixEvent.BurnXEN(_msgSender(), xen);
     }
 
     /// @notice Starts a stake

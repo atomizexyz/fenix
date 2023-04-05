@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { Fenix, Stake, FenixEvent, Status } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
+import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
 contract FenixTest is Test {
@@ -18,6 +19,14 @@ contract FenixTest is Test {
 
     uint256 internal term = 100;
     uint256 internal oneHundredKXen = 100_000e18;
+
+    event Redeemed(
+        address indexed user,
+        address indexed xenContract,
+        address indexed tokenContract,
+        uint256 xenAmount,
+        uint256 tokenAmount
+    );
 
     /// ============ Setup test suite ============
 
@@ -35,20 +44,18 @@ contract FenixTest is Test {
     }
 
     /// @notice Test fenix minted event is emitted
-    function test_FenixMintedEvent() public {
-        vm.expectEmit(true, true, false, false);
-        emit FenixEvent.MintFenix(address(bob), 10_000000000000000000);
+    function test_RedeemedEvent() public {
+        vm.expectEmit(true, true, false, false, address(fenix));
+        emit Redeemed(
+            address(bob),
+            address(xenCrypto),
+            address(fenix),
+            100000_000000000000000000,
+            100_000000000000000000
+        );
 
-        helper.batchDealTo(stakers, oneHundredKXen, address(xenCrypto));
-        helper.getFenixFor(stakers, fenix, xenCrypto);
-    }
-
-    function test_XENBurnedEvent() public {
-        vm.expectEmit(true, true, false, false);
-        emit FenixEvent.BurnXEN(address(bob), 100000_000000000000000000);
-
-        helper.batchDealTo(stakers, oneHundredKXen, address(xenCrypto));
-        helper.getFenixFor(stakers, fenix, xenCrypto);
+        vm.prank(address(xenCrypto));
+        fenix.onTokenBurned(bob, oneHundredKXen);
     }
 
     /// @notice Test that the start stake event is emitted
