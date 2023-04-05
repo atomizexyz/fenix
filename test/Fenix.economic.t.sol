@@ -302,8 +302,101 @@ contract FenixEconomicTest is Test {
         fenix.endStake(0);
 
         uint256 bobBalanceEnd = fenix.balanceOf(bob);
+        assertEq(bobBalanceStart, 1000000000000000000000000);
+        assertEq(bobBalanceEnd, 499434056680330565071780);
         assertGt(bobBalanceStart, bobBalanceEnd);
         assertEq(fenix.shareRate(), 499434056680330565);
+    }
+
+    /// @notice Test minimum stake term return vs max term longer ends first
+    function test_MinimumStakeTermVsMax_BothEnd() public {
+        uint256 bobTerm = 1;
+        uint256 aliceTerm = fenix.MAX_STAKE_LENGTH_DAYS();
+        uint40 blockTs = uint40(block.timestamp);
+
+        uint256 bobBalanceStart = fenix.balanceOf(bob);
+        vm.prank(bob);
+        fenix.startStake(bobBalanceStart, bobTerm);
+
+        uint256 aliceFenixBalance = fenix.balanceOf(alice);
+        vm.prank(alice);
+        fenix.startStake(aliceFenixBalance, aliceTerm);
+
+        vm.warp(blockTs + (86_400 * bobTerm));
+
+        vm.prank(alice);
+        fenix.endStake(0);
+
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        uint256 bobBalanceEnd = fenix.balanceOf(bob);
+        uint256 aliceBalanceEnd = fenix.balanceOf(alice);
+
+        assertEq(bobBalanceEnd, 2400877559157648693963390);
+        assertEq(aliceBalanceEnd, 32363770644036610);
+        assertGt(bobBalanceEnd, aliceBalanceEnd);
+        assertEq(fenix.shareRate(), 2_400877559157648693);
+    }
+
+    /// @notice Test minimum stake term return vs max term longer ends first
+    function test_MultipleMinimumStakeTermVsOneMax() public {
+        uint256 bobTerm = 1;
+        uint256 aliceTerm = fenix.MAX_STAKE_LENGTH_DAYS();
+        uint40 blockTs = uint40(block.timestamp);
+
+        uint256 bobBalanceStart = fenix.balanceOf(bob);
+        vm.prank(bob);
+        fenix.startStake(bobBalanceStart, bobTerm);
+
+        uint256 carolBalanceStart = fenix.balanceOf(carol);
+        vm.prank(carol);
+        fenix.startStake(carolBalanceStart, bobTerm);
+
+        uint256 danBalanceStart = fenix.balanceOf(dan);
+        vm.prank(dan);
+        fenix.startStake(danBalanceStart, bobTerm);
+
+        uint256 frankBalanceStart = fenix.balanceOf(frank);
+        vm.prank(frank);
+        fenix.startStake(frankBalanceStart, bobTerm);
+
+        // Long Staker
+
+        uint256 aliceFenixBalance = fenix.balanceOf(alice);
+        vm.prank(alice);
+        fenix.startStake(aliceFenixBalance, aliceTerm);
+
+        vm.warp(blockTs + (86_400 * bobTerm));
+
+        vm.prank(alice);
+        fenix.endStake(0);
+
+        vm.prank(carol);
+        fenix.endStake(0);
+
+        vm.prank(dan);
+        fenix.endStake(0);
+
+        vm.prank(frank);
+        fenix.endStake(0);
+
+        vm.prank(bob);
+        fenix.endStake(0);
+
+        uint256 carolBalanceEnd = fenix.balanceOf(carol);
+        uint256 danBalanceEnd = fenix.balanceOf(dan);
+        uint256 frankBalanceEnd = fenix.balanceOf(frank);
+        uint256 bobBalanceEnd = fenix.balanceOf(bob);
+        uint256 aliceBalanceEnd = fenix.balanceOf(alice);
+
+        assertEq(carolBalanceEnd, 1350252368562545201108177);
+        assertEq(danBalanceEnd, 1350252368562545199757924);
+        assertEq(frankBalanceEnd, 1350252368562545201783303);
+        assertEq(bobBalanceEnd, 1350252368562545201783304);
+        assertEq(aliceBalanceEnd, 44829180496567292);
+        assertGe(bobBalanceEnd, aliceBalanceEnd);
+        assertEq(fenix.shareRate(), 1_350252368562545201);
     }
 
     /// @notice Test single staker with multiple stakes
