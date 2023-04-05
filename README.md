@@ -93,6 +93,23 @@ yarn lint
 
 ## Deployment Checklist
 
+#### Mainnet XEN Address List
+
+| Chain        | Contract Address                             |
+| :----------- | :------------------------------------------- |
+| Ethereum     | `0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8` |
+| BNB          | `0x2AB0e9e4eE70FFf1fB9D67031E44F6410170d00e` |
+| Polygon      | `0x2AB0e9e4eE70FFf1fB9D67031E44F6410170d00e` |
+| Avalanche    | `0xC0C5AA69Dbe4d6DDdfBc89c0957686ec60F24389` |
+| Ethereum PoW | `0x2AB0e9e4eE70FFf1fB9D67031E44F6410170d00e` |
+| Moonbeam     | `0xb564A5767A00Ee9075cAC561c427643286F8F4E1` |
+| Evmos        | `0x2AB0e9e4eE70FFf1fB9D67031E44F6410170d00e` |
+| Fantom       | `0xeF4B763385838FfFc708000f884026B8c0434275` |
+| Dogechain    | `0x948eed4490833D526688fD1E5Ba0b9B35CD2c32e` |
+| OKCChain     | `0x1cC4D981e897A3D2E7785093A648c0a75fAd0453` |
+
+#### Deployment Scripts
+
 - [ ] Update address in Fenix.sol to point to XEN contract address
 - [ ] Run `./script/deployProdFENIX.sh`
 
