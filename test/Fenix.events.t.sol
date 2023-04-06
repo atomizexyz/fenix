@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake, FenixEvent, Status } from "@atomize/Fenix.sol";
+import { Fenix, Stake, FenixEvent, Status, Reward } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
 import { HelpersTest } from "./Helpers.t.sol";
@@ -134,10 +134,13 @@ contract FenixTest is Test {
     function test_FlushRewardPoolEvent() public {
         uint40 blockTs = uint40(block.timestamp);
 
-        vm.warp(blockTs + (86_400 * 180) + 1);
+        uint40 warpTs = blockTs + (86_400 * 180) + 1;
+        vm.warp(warpTs);
+
+        Reward memory verifyReward = Reward(0, warpTs, 10e18, address(bob));
 
         vm.expectEmit(false, false, false, false);
-        emit FenixEvent.FlushRewardPool();
+        emit FenixEvent.FlushRewardPool(verifyReward);
 
         fenix.flushRewardPool();
     }

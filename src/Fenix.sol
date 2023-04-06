@@ -40,6 +40,13 @@ struct Stake {
     uint256 payout;
 }
 
+struct Reward {
+    uint40 id;
+    uint40 rewardTs;
+    uint256 fenix;
+    address caller;
+}
+
 ///----------------------------------------------------------------------------------------------------------------
 /// Events
 ///----------------------------------------------------------------------------------------------------------------
@@ -61,7 +68,7 @@ library FenixEvent {
 
     /// @notice Reward Pool has been flushed
     /// @dev Flushed reward pool into staker pool
-    event FlushRewardPool();
+    event FlushRewardPool(Reward indexed reward);
 
     /// @notice Share rate has been updated
     /// @dev Share rate has been updated
@@ -122,7 +129,8 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     uint256 public equityPoolSupply = 0;
     uint256 public equityPoolTotalShares = 0;
 
-    mapping(address => Stake[]) public stakes;
+    mapping(address => Stake[]) internal stakes;
+    Reward[] internal rewards;
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Contract
@@ -345,8 +353,12 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         uint256 cooldownPeriods = (block.timestamp - cooldownUnlockTs) / REWARD_COOLDOWN_TS;
         equityPoolSupply += rewardPoolSupply;
         cooldownUnlockTs += REWARD_COOLDOWN_TS + (cooldownPeriods * REWARD_COOLDOWN_TS);
+
+        Reward memory reward = Reward(uint40(rewards.length), uint40(block.timestamp), rewardPoolSupply, _msgSender());
+
         rewardPoolSupply = 0;
-        emit FenixEvent.FlushRewardPool();
+        rewards.push(reward);
+        emit FenixEvent.FlushRewardPool(reward);
     }
 
     /// @notice Get stake for address at index
@@ -364,5 +376,20 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @return stake count
     function stakeCount(address stakerAddress) public view returns (uint256) {
         return stakes[stakerAddress].length;
+    }
+
+    /// @notice Get reward for index
+    /// @dev Read reward from rewards array
+    /// @param index index of reward to read
+    /// @return reward
+    function rewardFor(uint256 index) public view returns (Reward memory) {
+        return rewards[index];
+    }
+
+    /// @notice Get reward count
+    /// @dev Read reward count from rewards array
+    /// @return reward count
+    function rewardCount() public view returns (uint256) {
+        return rewards.length;
     }
 }

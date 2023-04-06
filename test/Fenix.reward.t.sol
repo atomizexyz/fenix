@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, FenixError } from "@atomize/Fenix.sol";
+import { Fenix, Reward, FenixError } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
 
@@ -47,6 +47,8 @@ contract AdoptionRewardTest is Test {
     /// @notice Test that the contract can be deployed successfully
     function test_ReferralReward() public {
         assertEq(fenix.rewardPoolSupply(), 60_000000000000000000); // verify
+
+        assertEq(fenix.rewardCount(), 0); // verify
     }
 
     /// @notice Test that referral can be flushed to the stake pool
@@ -101,10 +103,29 @@ contract AdoptionRewardTest is Test {
     function test_ReferralReward_RevertWhen_AlreadyClaimed() public {
         uint256 skipWeeks = 3;
 
-        vm.warp(block.timestamp + (86_400 * 7 * skipWeeks));
+        uint40 warpTs = uint40(block.timestamp + (86_400 * 7 * skipWeeks));
+        vm.warp(warpTs);
         fenix.flushRewardPool();
 
         vm.expectRevert(FenixError.CooldownActive.selector); // verify
         fenix.flushRewardPool();
+    }
+
+    /// @notice Test flush reward pool and all caller to Rewards
+    function test_FlushRewardPoolAddCallerToRewards() public {
+        uint256 skipWeeks = 3;
+
+        uint40 warpTs = uint40(block.timestamp + (86_400 * 7 * skipWeeks));
+        vm.warp(warpTs);
+        fenix.flushRewardPool();
+
+        assertEq(fenix.rewardCount(), 1); // verify
+
+        Reward memory reward = fenix.rewardFor(0);
+
+        assertEq(reward.id, 0); // verify
+        assertEq(reward.rewardTs, warpTs); // verify
+        assertEq(reward.fenix, 60_000000000000000000); // verify
+        assertEq(reward.caller, address(bob)); // verify
     }
 }
