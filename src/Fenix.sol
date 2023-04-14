@@ -326,8 +326,8 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         if (block.timestamp > stake.endTs) revert FenixError.StakeLate();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_TS;
-        UD60x18 base = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
-        return unwrap(base);
+        UD60x18 reward = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
+        return unwrap(reward);
     }
 
     /// @notice Calculate the late end stake penalty
