@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Fenix, Stake, FenixEvent, Status, Reward } from "@atomize/Fenix.sol";
+import { Fenix, Stake, Status, Reward } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { IBurnRedeemable } from "xen-crypto/interfaces/IBurnRedeemable.sol";
 import { HelpersTest } from "./Helpers.t.sol";
@@ -27,6 +27,16 @@ contract FenixTest is Test {
         uint256 xenAmount,
         uint256 tokenAmount
     );
+
+    event StartStake(Stake indexed _stake);
+
+    event DeferStake(Stake indexed _stake);
+
+    event EndStake(Stake indexed _stake);
+
+    event FlushRewardPool(Reward indexed reward);
+
+    event UpdateShareRate(uint256 indexed _shareRate);
 
     /// ============ Setup test suite ============
 
@@ -72,7 +82,7 @@ contract FenixTest is Test {
         );
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.StartStake(verifyStake);
+        emit StartStake(verifyStake);
 
         fenix.startStake(fenix.balanceOf(bob), term);
         // helper.printStake(fenix.stakeFor(bob, 0));
@@ -98,7 +108,7 @@ contract FenixTest is Test {
         vm.warp(blockTs + (86_400 * term));
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.DeferStake(verifyDeferral);
+        emit DeferStake(verifyDeferral);
 
         fenix.deferStake(0, bob);
         // helper.printStake(fenix.stakeFor(bob, 0));
@@ -124,7 +134,7 @@ contract FenixTest is Test {
         vm.warp(blockTs + (86_400 * term));
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.EndStake(verifyEnd);
+        emit EndStake(verifyEnd);
 
         fenix.endStake(0);
         // helper.printStake(fenix.stakeFor(bob, 0));
@@ -140,7 +150,7 @@ contract FenixTest is Test {
         Reward memory verifyReward = Reward(0, warpTs, 10e18, address(bob));
 
         vm.expectEmit(false, false, false, false);
-        emit FenixEvent.FlushRewardPool(verifyReward);
+        emit FlushRewardPool(verifyReward);
 
         fenix.flushRewardPool();
     }
@@ -155,7 +165,7 @@ contract FenixTest is Test {
         vm.warp(blockTs + (86_400 * oneYearTerm));
 
         vm.expectEmit(true, false, false, false);
-        emit FenixEvent.UpdateShareRate(1_016180339887498948);
+        emit UpdateShareRate(1_016180339887498948);
 
         fenix.endStake(0);
         // console.log(fenix.shareRate());

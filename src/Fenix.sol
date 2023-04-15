@@ -50,35 +50,6 @@ struct Reward {
 ///----------------------------------------------------------------------------------------------------------------
 /// Events
 ///----------------------------------------------------------------------------------------------------------------
-library FenixEvent {
-    /// @notice Stake has been started
-    /// @dev Size and Time bonus have been calculated to burn FENIX in exchnge for equity to start stake
-    /// @param _stake the stake object
-    event StartStake(Stake indexed _stake);
-
-    /// @notice Stake has been deferred
-    /// @dev Remove the stake and it's equity from the pool
-    /// @param _stake the stake object
-    event DeferStake(Stake indexed _stake);
-
-    /// @notice Stake has been ended
-    /// @dev Remove the stake from the users stakes and mint the payout into the stakers wallet
-    /// @param _stake the stake object
-    event EndStake(Stake indexed _stake);
-
-    /// @notice Reward Pool has been flushed
-    /// @dev Flushed reward pool into staker pool
-    event FlushRewardPool(Reward indexed reward);
-
-    /// @notice Share rate has been updated
-    /// @dev Share rate has been updated
-    /// @param _shareRate the new share rate
-    event UpdateShareRate(uint256 indexed _shareRate);
-}
-
-///----------------------------------------------------------------------------------------------------------------
-/// Events
-///----------------------------------------------------------------------------------------------------------------
 library FenixError {
     error WrongCaller(address caller);
     error AddressZero();
@@ -131,6 +102,34 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
     mapping(address => Stake[]) internal stakes;
     Reward[] internal rewards;
+
+    ///----------------------------------------------------------------------------------------------------------------
+    /// Events
+    ///----------------------------------------------------------------------------------------------------------------
+
+    /// @notice Stake has been started
+    /// @dev Size and Time bonus have been calculated to burn FENIX in exchnge for equity to start stake
+    /// @param _stake the stake object
+    event StartStake(Stake indexed _stake);
+
+    /// @notice Stake has been deferred
+    /// @dev Remove the stake and it's equity from the pool
+    /// @param _stake the stake object
+    event DeferStake(Stake indexed _stake);
+
+    /// @notice Stake has been ended
+    /// @dev Remove the stake from the users stakes and mint the payout into the stakers wallet
+    /// @param _stake the stake object
+    event EndStake(Stake indexed _stake);
+
+    /// @notice Reward Pool has been flushed
+    /// @dev Flushed reward pool into staker pool
+    event FlushRewardPool(Reward indexed reward);
+
+    /// @notice Share rate has been updated
+    /// @dev Share rate has been updated
+    /// @param _shareRate the new share rate
+    event UpdateShareRate(uint256 indexed _shareRate);
 
     ///----------------------------------------------------------------------------------------------------------------
     /// Contract
@@ -196,7 +195,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         stakes[_msgSender()].push(_stake);
 
         _burn(_msgSender(), fenix);
-        emit FenixEvent.StartStake(_stake);
+        emit StartStake(_stake);
     }
 
     /// @notice Defer stake until future date
@@ -240,7 +239,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         equityPoolTotalShares -= _stake.shares;
         equityPoolSupply -= equitySupply;
 
-        emit FenixEvent.DeferStake(deferredStake);
+        emit DeferStake(deferredStake);
     }
 
     /// @notice End a stake
@@ -258,7 +257,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
         if (returnOnStake > shareRate) {
             shareRate = returnOnStake;
-            emit FenixEvent.UpdateShareRate(shareRate);
+            emit UpdateShareRate(shareRate);
         }
 
         Stake memory endedStake = Stake(
@@ -273,7 +272,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         );
 
         stakes[_msgSender()][stakeIndex] = endedStake;
-        emit FenixEvent.EndStake(endedStake);
+        emit EndStake(endedStake);
     }
 
     /// @notice Calculate bonus
@@ -358,7 +357,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
         rewardPoolSupply = 0;
         rewards.push(reward);
-        emit FenixEvent.FlushRewardPool(reward);
+        emit FlushRewardPool(reward);
     }
 
     /// @notice Get stake for address at index
