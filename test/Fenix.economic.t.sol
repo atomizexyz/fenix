@@ -109,12 +109,12 @@ contract FenixEconomicTest is Test {
 
         assertGt(alicePayout, bobPayout);
 
-        assertEq(bobPayout, 9452729_85448836509979027);
+        assertEq(bobPayout, 945272985448836507929663);
         assertEq(fenix.stakeCount(bob), 1);
 
-        assertEq(alicePayout, 1104090_297419575036020973);
+        assertEq(alicePayout, 1104090297419575038070337);
         assertEq(fenix.stakeCount(alice), 1);
-        assertEq(fenix.shareRate(), 1_104090297419575036);
+        assertEq(fenix.shareRate(), 1104090297419575038);
     }
 
     function test_MultipleStakesWealthRedistribution() public {
@@ -422,10 +422,10 @@ contract FenixEconomicTest is Test {
         Stake memory secondStakeEnded = fenix.stakeFor(bob, 1);
         Stake memory thirdStakeEnded = fenix.stakeFor(bob, 2);
 
-        assertEq(firstStakeEnded.payout, 999_837743993526233326);
-        assertEq(secondStakeEnded.payout, 999_837743993526232469);
-        assertEq(thirdStakeEnded.payout, 2000_676326569628570205);
+        assertEq(firstStakeEnded.payout, 999838119026719802568);
+        assertEq(secondStakeEnded.payout, 999838119026719802264);
+        assertEq(thirdStakeEnded.payout, 2000675576503241431168);
 
-        assertEq(fenix.shareRate(), 1_000338163284814285);
+        assertEq(fenix.shareRate(), 1000337788251620715);
     }
 }

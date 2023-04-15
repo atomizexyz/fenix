@@ -29,7 +29,7 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 0, "no bonus for amounts less or equal to 1");
+        assertEq(bonus, 1376730173537944169);
     }
 
     /// @notice Test calculating large bonus
@@ -38,7 +38,7 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 2_753460319541284867);
+        assertEq(bonus, 2_753460319541285142);
     }
 
     /// @notice Test calculating
@@ -47,12 +47,16 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 0, "no bonus for amounts less or equal to 1");
+        assertEq(bonus, 250314577006898942);
     }
 
     /// @notice Test that size bonus will always return value greater than or equal to zero
     function testFuzz_CalculateSizeBonus(uint256 fuzzFenix) public {
+        if (fuzzFenix >= type(uint256).max - 3) {
+            vm.expectRevert(FenixError.SizeGreaterThanMax.selector); // verify
+        }
         uint256 bonus = fenix.calculateSizeBonus(fuzzFenix);
+        console.log(bonus);
         assertGe(bonus, 0); // verify
     }
 

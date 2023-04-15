@@ -61,6 +61,7 @@ library FenixError {
     error StakeLate();
     error CooldownActive();
     error StakeStatusAlreadySet(Status status);
+    error SizeGreaterThanMax();
 }
 
 /// @title FENIX pays you to hold your own crypto
@@ -78,6 +79,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
     uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_777;
 
+    uint256 internal constant UINT256_MAX = type(uint256).max;
     uint256 internal constant ONE_DAY_TS = 86_400; // (1 day)
     uint256 internal constant ONE_EIGHTY_DAYS_TS = 15_552_000; // 86_400 * 180 (180 days)
     uint256 internal constant REWARD_COOLDOWN_TS = 7_862_400; // 86_400 * 7 * 13  (13 weeks)
@@ -292,8 +294,8 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param fenix the amount of fenix used to calculate the equity stake
     /// @return bonus the size bonus for pool equity stake
     function calculateSizeBonus(uint256 fenix) public pure returns (uint256) {
-        if (ud(fenix).lt(ONE)) return 0;
-        return unwrap(ONE.sub(ud(fenix).inv()));
+        if (fenix >= (UINT256_MAX - 3)) revert FenixError.SizeGreaterThanMax();
+        return unwrap(ONE.sub((ud(fenix).add(ONE)).inv()));
     }
 
     /// @notice Calculate time bonus
