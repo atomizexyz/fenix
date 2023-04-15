@@ -36,12 +36,20 @@ contract FenixStakeTest is Test {
         helper.getFenixFor(stakers, fenix, xenCrypto);
     }
 
+    function test_StakeStart_OneFenix() public {
+        fenix.startStake(1e18, term);
+
+        Stake memory stake = fenix.stakeFor(bob, 0);
+        assertGt(stake.shares, 0); // verify
+        assertTrue(stake.status == Status.ACTIVE); // verify
+    }
+
     /// @notice Test starting stake works
     function test_StakeStartOne() public {
         fenix.startStake(fenix.balanceOf(bob), term);
 
-        Stake memory stake0 = fenix.stakeFor(bob, 0);
-        assertTrue(stake0.status == Status.ACTIVE); // verify
+        Stake memory stake = fenix.stakeFor(bob, 0);
+        assertTrue(stake.status == Status.ACTIVE); // verify
     }
 
     /// @notice Test starting multiple stakes

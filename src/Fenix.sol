@@ -311,7 +311,6 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// @param bonus the bonus to calculate the shares from
     /// @return shares the number of shares to be issued to the staker
     function calculateShares(uint256 bonus) public view returns (uint256) {
-        if (shareRate == 0) return bonus;
         UD60x18 shares = ud(bonus).div(ud(shareRate));
         return unwrap(shares);
     }
