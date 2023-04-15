@@ -305,7 +305,7 @@ contract FenixEconomicTest is Test {
         assertEq(bobBalanceStart, 1000000_000000000000000000);
         assertEq(bobBalanceEnd, 498921_153863720572949881);
         assertGt(bobBalanceStart, bobBalanceEnd);
-        assertEq(fenix.shareRate(), 498921153863720572);
+        assertEq(fenix.shareRate(), 1e18);
     }
 
     /// @notice Test minimum stake term return vs max term longer ends first

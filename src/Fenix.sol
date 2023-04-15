@@ -95,7 +95,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     uint256 public cooldownUnlockTs;
     uint256 public rewardPoolSupply = 0;
 
-    uint256 public shareRate = 0;
+    uint256 public shareRate = 1e18;
 
     uint256 public equityPoolSupply = 0;
     uint256 public equityPoolTotalShares = 0;

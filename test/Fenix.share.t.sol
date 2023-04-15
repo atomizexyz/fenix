@@ -38,7 +38,7 @@ contract FenixShareTest is Test {
     function test_ShareRateUpdate_OneYear() public {
         uint256 term = 365;
 
-        assertEq(fenix.shareRate(), 0); // verify
+        assertEq(fenix.shareRate(), 1e18); // verify
 
         fenix.startStake(fenix.balanceOf(bob), term);
 
@@ -53,7 +53,7 @@ contract FenixShareTest is Test {
     function test_ShareRateUpdate_TenYears() public {
         uint256 term = 3650;
 
-        assertEq(fenix.shareRate(), 0); // verify
+        assertEq(fenix.shareRate(), 1e18); // verify
 
         fenix.startStake(fenix.balanceOf(bob), term);
 
