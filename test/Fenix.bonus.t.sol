@@ -38,7 +38,7 @@ contract BonusTest is Test {
         uint256 term = 100;
 
         uint256 bonus = fenix.calculateBonus(amount, term);
-        assertEq(bonus, 2_753977704008406161);
+        assertEq(bonus, 2_753460319541284867);
     }
 
     /// @notice Test calculating

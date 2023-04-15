@@ -76,7 +76,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
 
     uint256 public constant XEN_BURN_RATIO = 10_000;
 
-    uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_665; // 365 * 21 (21 years)
+    uint256 public constant MAX_STAKE_LENGTH_DAYS = 7_777;
 
     uint256 internal constant ONE_DAY_TS = 86_400; // (1 day)
     uint256 internal constant ONE_EIGHTY_DAYS_TS = 15_552_000; // 86_400 * 180 (180 days)
