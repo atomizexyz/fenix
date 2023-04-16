@@ -122,9 +122,13 @@ forge script script/FenixProd.s.sol:FenixProdScript --rpc-url $RPC_URL --legacy
 ```
 
 ```
+# Testnet
 forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $GOERLI_RPC_URL --broadcast -vvvv
 forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $MUMBAI_RPC_URL --broadcast -vvvv
-forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $X1_RPC_URL --legacy --broadcast -vvvv
+forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $X1_DEVNET_RPC_URL --legacy --broadcast -vvvv
+forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $PULSECHAIN_TESTNET_RPC_URL --broadcast -vvvv
+
+# Mainnet
 ```
 
 ## Acknowledgements
