@@ -6,7 +6,7 @@ import { console } from "forge-std/console.sol";
 import { Fenix, FenixError } from "@atomize/Fenix.sol";
 import { XENCrypto } from "xen-crypto/XENCrypto.sol";
 import { HelpersTest } from "./Helpers.t.sol";
-import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
+import { UD60x18, wrap, unwrap, ud, E, ZERO, sqrt } from "@prb/math/UD60x18.sol";
 
 contract FenixBurnTest is Test {
     HelpersTest internal helper;

@@ -17,7 +17,7 @@ pragma solidity ^0.8.17;
 @@@@@@@@@@@@@@@@@@@@@@@@@#7.    .^Y&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ***********************************************************************************************************************/
 
-import { UD60x18, toUD60x18, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
+import { UD60x18, convert, wrap, unwrap, ud, E, ZERO } from "@prb/math/UD60x18.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import { IBurnableToken } from "xen-crypto/interfaces/IBurnableToken.sol";
@@ -326,7 +326,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
         if (block.timestamp > stake.endTs) revert FenixError.StakeLate();
         uint256 termDelta = block.timestamp - stake.startTs;
         uint256 scaleTerm = stake.term * ONE_DAY_TS;
-        UD60x18 reward = (toUD60x18(termDelta).div(toUD60x18(scaleTerm))).powu(2);
+        UD60x18 reward = (convert(termDelta).div(convert(scaleTerm))).powu(2);
         return unwrap(reward);
     }
 

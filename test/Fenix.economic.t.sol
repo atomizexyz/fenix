@@ -109,12 +109,12 @@ contract FenixEconomicTest is Test {
 
         assertGt(alicePayout, bobPayout);
 
-        assertEq(bobPayout, 945272985448836507929663);
+        assertEq(bobPayout, 945272985446119696825651);
         assertEq(fenix.stakeCount(bob), 1);
 
-        assertEq(alicePayout, 1104090297419575038070337);
+        assertEq(alicePayout, 1104090297526375081174349);
         assertEq(fenix.stakeCount(alice), 1);
-        assertEq(fenix.shareRate(), 1104090297419575038);
+        assertEq(fenix.shareRate(), 1104090297526375081);
     }
 
     function test_MultipleStakesWealthRedistribution() public {
