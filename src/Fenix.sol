@@ -68,12 +68,12 @@ library FenixError {
 /// @author Joe Blau <joe@atomize.xyz>
 /// @notice FENIX pays you to hold your own crypto
 /// @dev Fenix is an ERC20 token that pays you to hold your own crypto.
-contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
+contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "fmFENIX") {
     ///----------------------------------------------------------------------------------------------------------------
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    address public constant XEN_ADDRESS = 0xcB99cbfA54b88CDA396E39aBAC010DFa6E3a03EE;
+    address public constant XEN_ADDRESS = 0xeF4B763385838FfFc708000f884026B8c0434275;
 
     uint256 public constant XEN_BURN_RATIO = 10_000;
 
