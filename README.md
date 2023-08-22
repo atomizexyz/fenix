@@ -137,12 +137,8 @@ forge script script/FENIXProd.s.sol:FENIXProdScript --rpc-url $PULSECHAIN_TESTNE
   storage and transfer
 - [`0x1f98...f984`](https://etherscan.io/token/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984)
   [Uniswap V1](https://github.com/Uniswap/v1-contracts) (Nov 2, 2018) — Equity based liquidity pool
-- [`0xd9D4...F5a6`](https://etherscan.io/token/0xd9D4A7CA154fe137c808F7EEDBe24b639B7AF5a6)
-  [Cereneum](https://github.com/Cereneum/Cereneum) (Jun 6, 2019) — Time-based interest-bearing Cryptographic Certificate
-  of Interest
 - [`0x2b59...eb39`](https://etherscan.io/token/0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39)
-  [HEX](https://github.com/BitcoinHEX/contract) (Dec 2, 2019) — Share rate ratcheting increasing the cost basis for
-  later stakers
-
+  [HEX](https://github.com/BitcoinHEX/contract) (Dec 2, 2019) — Time-based interest-bearing Cryptographic Certificate of
+  deposit with share rate ratcheting increasing the cost basis for later stakers
 - [`0x0645...6Fb8`](https://etherscan.io/token/0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8)
   [XEN Crypto](https://github.com/FairCrypto/XEN-crypto) (Oct 8, 2022) — Cross-chain protocol launch
