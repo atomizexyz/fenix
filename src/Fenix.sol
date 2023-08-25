@@ -73,7 +73,7 @@ contract Fenix is IBurnRedeemable, IERC165, ERC20("FENIX", "FENIX") {
     /// Constants
     ///----------------------------------------------------------------------------------------------------------------
 
-    address public constant XEN_ADDRESS = 0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8;
+    address public constant XEN_ADDRESS = 0x8a7FDcA264e87b6da72D000f22186B4403081A2a;
 
     uint256 public constant XEN_BURN_RATIO = 10_000;
 
